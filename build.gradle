@@ -1,0 +1,97 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'maven-publish'
+    id 'application'
+    id 'java'
+}
+
+group = 'net.foulest' // TODO: Change this to your group
+version = '1.0.0' // TODO: Change this to your version
+description = 'JavaTemplate' // TODO: Change this to your description
+
+// Set the project's language level
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8)) // TODO: Change this to your Java version
+    }
+}
+
+repositories {
+    // Maven central repository
+    mavenCentral()
+    mavenLocal()
+
+    // Local libraries
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    // JetBrains Annotations - for code inspection and documentation
+    // https://mvnrepository.com/artifact/org.jetbrains/annotations
+    compileOnly group: 'org.jetbrains', name: 'annotations', version: '26.0.1'
+
+    // Lombok - for reducing boilerplate code
+    // https://projectlombok.org
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.36'
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.36'
+}
+
+tasks {
+    jar {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        archiveFileName.set("${project.name}-${project.version}-default.jar")
+
+        // Set the 'Main-Class' attribute in the JAR manifest
+        manifest {
+            attributes 'Main-Class': 'net.foulest.template.Main' // TODO: Change this to your main class
+        }
+    }
+
+    shadowJar {
+        mainClassName = 'net.foulest.template.Main' // TODO: Change this to your main class
+        archiveFileName.set("${project.name}-${project.version}.jar")
+    }
+
+    compileJava {
+        dependsOn(clean)
+        options.encoding = 'UTF-8'
+    }
+
+    build {
+        dependsOn(shadowJar)
+    }
+
+    distZip {
+        dependsOn(shadowJar)
+    }
+
+    distTar {
+        dependsOn(shadowJar)
+    }
+
+    startScripts {
+        dependsOn(shadowJar)
+    }
+
+    startShadowScripts {
+        dependsOn(jar)
+    }
+
+    tasks.register('sourceJar', Jar) {
+        from sourceSets.main.allJava
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'net.foulest.template' // TODO: Change this to your group
+            artifactId = project.name
+            version = project.version
+
+            from components.java
+        }
+    }
+}
