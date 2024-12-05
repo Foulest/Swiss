@@ -1,5 +1,5 @@
 /*
- * Swiss - a Monte Carlo bracket simulator for the CS2 Major.
+ * Swiss - a Monte Carlo bracket simulator for Counter-Strike 2 tournaments.
  * Copyright (C) 2024 Foulest (https://github.com/Foulest)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,32 +15,47 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.foulest.swiss;
+package net.foulest.swiss.match;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import net.foulest.swiss.team.Team;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
+/**
+ * Represents a match between two teams.
+ */
 @Data
 @AllArgsConstructor
-class Match {
+public class Match {
 
     private Team team1;
     private Team team2;
-    private boolean bestOfThree;
+    private int maxRounds;
 
-    Team simulate() {
+    /**
+     * Simulates a match between two teams.
+     *
+     * @param mostLikelyOnly Whether to return the most likely winner only.
+     * @return The winning team.
+     */
+    public Team simulate(boolean mostLikelyOnly) {
         int team1Wins = 0;
         int team2Wins = 0;
         double winProbability = calculateWinProbability(team1, team2);
 
+        // Return the most likely winner only
+        if (mostLikelyOnly) {
+            return winProbability >= 0.5 ? team1 : team2;
+        }
+
         // Generate random numbers in bulk for up to 5 rounds
         double[] randomNumbers = new Random().doubles(5).toArray();
         int round = 0;
-        int maxRounds = bestOfThree ? 3 : 1;
 
+        // Simulates the match
         while (team1Wins < maxRounds && team2Wins < maxRounds) {
             if (randomNumbers[round] < winProbability) {
                 team1Wins++;
@@ -53,19 +68,34 @@ class Match {
         return team1Wins == maxRounds ? team1 : team2;
     }
 
+    /**
+     * Calculates the win probability of a team against another team.
+     * - 20% of the win probability is based on the team's world ranking.
+     * - 80% of the win probability is based on the team's average player rating.
+     *
+     * @param t1 The first team.
+     * @param t2 The second team.
+     * @return The win probability of the first team.
+     */
     private static double calculateWinProbability(@NotNull Team t1, @NotNull Team t2) {
-        final double W1_DIV_MAX_RANK = 0.20 / 100.0; // Precompute constant
-        final double W2 = 0.80;
-        final double SCALE = 5.0;
+        final double worldRankingWeight = 0.20 / 100.0; // Precompute constant
+        final double playerRatingWeight = 0.80;
+        final double scale = 5.0;
 
         // Compute scores
-        double t1Score = W1_DIV_MAX_RANK * (100.0 - t1.getWorldRanking()) + W2 * t1.getAvgPlayerRating();
-        double t2Score = W1_DIV_MAX_RANK * (100.0 - t2.getWorldRanking()) + W2 * t2.getAvgPlayerRating();
+        double t1Score = worldRankingWeight * (100.0 - t1.getWorldRanking()) + playerRatingWeight * t1.getAvgPlayerRating();
+        double t2Score = worldRankingWeight * (100.0 - t2.getWorldRanking()) + playerRatingWeight * t2.getAvgPlayerRating();
 
         // Calculate win probability
-        return 1.0 / (1.0 + Math.exp(-SCALE * (t1Score - t2Score)));
+        return 1.0 / (1.0 + Math.exp(-scale * (t1Score - t2Score)));
     }
 
+    /**
+     * Displays the winner of a match based on the win probability of the teams.
+     *
+     * @param t1 The first team.
+     * @param t2 The second team.
+     */
     public static void displayWinnerFromProbability(@NotNull Team t1, @NotNull Team t2) {
         double winProbability = calculateWinProbability(t1, t2);
         String t1Name = t1.getName();

@@ -1,5 +1,5 @@
 /*
- * Swiss - a Monte Carlo bracket simulator for the CS2 Major.
+ * Swiss - a Monte Carlo bracket simulator for Counter-Strike 2 tournaments.
  * Copyright (C) 2024 Foulest (https://github.com/Foulest)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.foulest.swiss;
+package net.foulest.swiss.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,5 +1,5 @@
 /*
- * Swiss - a Monte Carlo bracket simulator for the CS2 Major.
+ * Swiss - a Monte Carlo bracket simulator for Counter-Strike 2 tournaments.
  * Copyright (C) 2024 Foulest (https://github.com/Foulest)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,12 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.foulest.swiss;
+package net.foulest.swiss.team;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import net.foulest.swiss.Swiss;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Represents a team in the tournament.
+ */
 @Data
 @AllArgsConstructor
 public class Team {
@@ -35,7 +39,7 @@ public class Team {
 
     // Method to get the Team object based on the team name
     public static @Nullable Team getTeamByName(String name) {
-        for (Team team : Main.teams) {
+        for (Team team : Swiss.teams) {
             if (team.name.equalsIgnoreCase(name)) {
                 return team;
             }

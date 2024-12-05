@@ -1,5 +1,5 @@
 /*
- * Swiss - a Monte Carlo bracket simulator for the CS2 Major.
+ * Swiss - a Monte Carlo bracket simulator for Counter-Strike 2 tournaments.
  * Copyright (C) 2024 Foulest (https://github.com/Foulest)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.foulest.swiss;
+package net.foulest.swiss.brackets;
 
 import lombok.Data;
+import net.foulest.swiss.match.Match;
+import net.foulest.swiss.team.Team;
+import net.foulest.swiss.util.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -26,15 +29,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Represents a bracket for the Challengers & Legends stages of the CS2 Major.
+ * <p>
+ * In this bracket format, 16 teams play against each other in a Swiss format.
+ * Every match is a BO1 until a team has a chance to be eliminated, at which point it becomes a BO3.
+ * The top 8 teams advance to the Champions stage, while the bottom 8 teams are eliminated.
+ */
 @Data
-class Bracket {
+public class StandardBracket {
 
     private List<Team> teams;
     private long startingTime;
-    private static Map<Pair<Team, Team>, Integer> pairwise3_0Results = new HashMap<>();
-    private static Map<Pair<Team, Team>, Integer> pairwise0_3Results = new HashMap<>();
 
-    Bracket(@NotNull List<Team> teams) {
+    // Pairwise results for 3-0 and 0-3 teams
+    private static Map<Pair<Team, Team>, Integer> pairwise3_0 = new HashMap<>();
+    private static Map<Pair<Team, Team>, Integer> pairwise0_3 = new HashMap<>();
+
+    public StandardBracket(@NotNull List<Team> teams) {
         this.teams = teams;
         startingTime = System.currentTimeMillis();
     }
@@ -45,7 +57,7 @@ class Bracket {
      * @param numSimulations The number of simulations to run.
      */
     @SuppressWarnings("NestedMethodCall")
-    void simulateMultipleBrackets(int numSimulations) {
+    public void simulateMultipleBrackets(int numSimulations) {
         // Map to track results for each team
         Map<Team, Map<String, Integer>> results = new ConcurrentHashMap<>();
 
@@ -104,12 +116,12 @@ class Bracket {
 
         // Generate first-round matchups based on seeding
         for (int i = 0; i < seededTeams.size() / 2; i++) {
-            Team higherSeed = seededTeams.get(i); // Top seed
-            Team lowerSeed = seededTeams.get(seededTeams.size() / 2 + i); // Bottom seed
-            Match match = new Match(higherSeed, lowerSeed, false);
+            Team team1 = seededTeams.get(i); // Top seed
+            Team team2 = seededTeams.get(seededTeams.size() / 2 + i); // Bottom seed
+            Match match = new Match(team1, team2, 1);
 
-            Team winner = match.simulate();
-            Team loser = (winner == higherSeed) ? lowerSeed : higherSeed;
+            Team winner = match.simulate(false);
+            Team loser = (winner == team1) ? team2 : team1;
 
             // Update records
             updateRecords(records, winner, loser);
@@ -290,7 +302,7 @@ class Bracket {
 
                     // Create the match if an ideal matchup exists
                     if (idealMatchup != null) {
-                        Match match = new Match(team, idealMatchup, bestOfThree);
+                        Match match = new Match(team, idealMatchup, bestOfThree ? 3 : 1);
                         matches.add(match);
                         availableTeams.remove(idealMatchup);
                     } else {
@@ -314,7 +326,7 @@ class Bracket {
 //                    );
 
                     // Simulate the match
-                    Team winner = match.simulate();
+                    Team winner = match.simulate(false);
                     Team loser = (winner == team1) ? team2 : team1;
 
                     // Update records
@@ -373,12 +385,12 @@ class Bracket {
         }
 
         // Record pairwise results for 3-0
-        pairwise3_0Results.put(new Pair<>(threeZeroTeams.get(0), threeZeroTeams.get(1)),
-                pairwise3_0Results.getOrDefault(new Pair<>(threeZeroTeams.get(0), threeZeroTeams.get(1)), 0) + 1);
+        pairwise3_0.put(new Pair<>(threeZeroTeams.get(0), threeZeroTeams.get(1)),
+                pairwise3_0.getOrDefault(new Pair<>(threeZeroTeams.get(0), threeZeroTeams.get(1)), 0) + 1);
 
         // Record pairwise results for 0-3
-        pairwise0_3Results.put(new Pair<>(zeroThreeTeams.get(0), zeroThreeTeams.get(1)),
-                pairwise0_3Results.getOrDefault(new Pair<>(zeroThreeTeams.get(0), zeroThreeTeams.get(1)), 0) + 1);
+        pairwise0_3.put(new Pair<>(zeroThreeTeams.get(0), zeroThreeTeams.get(1)),
+                pairwise0_3.getOrDefault(new Pair<>(zeroThreeTeams.get(0), zeroThreeTeams.get(1)), 0) + 1);
     }
 
     /**
@@ -432,21 +444,25 @@ class Bracket {
             case 1:
                 groups.add(getTeamsByRecord(records, 0, 0));
                 break;
+
             case 2:
                 groups.add(getTeamsByRecord(records, 1, 0));
                 groups.add(getTeamsByRecord(records, 0, 1));
                 break;
+
             case 3:
                 groups.add(getTeamsByRecord(records, 2, 0));
                 groups.add(getTeamsByRecord(records, 1, 1));
                 groups.add(getTeamsByRecord(records, 0, 2));
                 break;
+
             case 4:
                 groups.add(getTeamsByRecord(records, 3, 0));
                 groups.add(getTeamsByRecord(records, 2, 1));
                 groups.add(getTeamsByRecord(records, 1, 2));
                 groups.add(getTeamsByRecord(records, 0, 3));
                 break;
+
             case 5:
                 groups.add(getTeamsByRecord(records, 3, 0));
                 groups.add(getTeamsByRecord(records, 3, 1));
@@ -454,6 +470,7 @@ class Bracket {
                 groups.add(getTeamsByRecord(records, 1, 3));
                 groups.add(getTeamsByRecord(records, 0, 3));
                 break;
+
             case 6:
                 groups.add(getTeamsByRecord(records, 3, 0));
                 groups.add(getTeamsByRecord(records, 3, 1));
@@ -462,6 +479,7 @@ class Bracket {
                 groups.add(getTeamsByRecord(records, 1, 3));
                 groups.add(getTeamsByRecord(records, 0, 3));
                 break;
+
             default:
                 throw new IllegalArgumentException("Unsupported round: " + currentRound);
         }
@@ -650,8 +668,8 @@ class Bracket {
         System.out.println();
 
         // Print most common pairs for 3-0 and 0-3
-        printMostCommonPair("3-0", pairwise3_0Results, numSimulations);
-        printMostCommonPair("0-3", pairwise0_3Results, numSimulations);
+        printMostCommonPair("3-0", pairwise3_0, numSimulations);
+        printMostCommonPair("0-3", pairwise0_3, numSimulations);
     }
 
     /**

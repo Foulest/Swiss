@@ -1,5 +1,5 @@
 /*
- * Swiss - a Monte Carlo bracket simulator for the CS2 Major.
+ * Swiss - a Monte Carlo bracket simulator for Counter-Strike 2 tournaments.
  * Copyright (C) 2024 Foulest (https://github.com/Foulest)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,10 @@
 package net.foulest.swiss;
 
 import lombok.Data;
+import net.foulest.swiss.brackets.ChampionsBracket;
+import net.foulest.swiss.brackets.StandardBracket;
+import net.foulest.swiss.match.Match;
+import net.foulest.swiss.team.Team;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +29,12 @@ import java.util.Locale;
 import java.util.Scanner;
 
 /**
- * Main class for the program.
+ * Swiss class for the program.
  *
  * @author Foulest
  */
 @Data
-public final class Main {
+public final class Swiss {
 
     public static final List<Team> teams = new ArrayList<>();
 
@@ -40,6 +44,8 @@ public final class Main {
      * @param args The program's arguments.
      */
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in, "UTF-8").useLocale(Locale.ROOT);
+
         // Create teams with data from HLTV
         Team g2 = new Team("G2", 1, 2, 1.046);
         Team natusVincere = new Team("Natus Vincere", 2, 1, 1.098);
@@ -76,36 +82,73 @@ public final class Main {
         teams.add(big);
         teams.add(mibr);
 
-        // Get the amount of brackets to simulate based on user input
-        Scanner scanner = new Scanner(System.in, "UTF-8").useLocale(Locale.ROOT);
         System.out.println("Swiss - CS2 Major Monte Carlo Simulation");
         System.out.println("by Foulest | github.com/Foulest");
         System.out.println();
+        System.out.println("Choose the bracket to simulate:");
+        System.out.println("1. Standard Bracket");
+        System.out.println("2. Champions Bracket");
+        System.out.println();
+        System.out.print("Enter the bracket number: ");
+
+        // Get whether to simulate Standard or Champions bracket
+        int bracketNumber = scanner.nextInt();
+
+        if (bracketNumber != 1 && bracketNumber != 2) {
+            System.out.println("Invalid input. Please enter 1 or 2.");
+            return;
+        }
+
+        boolean standardBracket = bracketNumber == 1;
+
+        System.out.println();
         System.out.println("Note: At 25,000,000 simulations, the data is as accurate as it can be.");
         System.out.println("Anything beyond that would be computationally expensive and unnecessary.");
-        System.out.println("On average, every iteration of simulating 1,000,000 brackets takes 7.5 seconds.");
+        System.out.println("On average, for Standard brackets, every 1,000,000 simulations takes 7.5 seconds.");
+        System.out.println("On average, for Champions brackets, every 1,000,000 simulations takes 1.5 seconds.");
         System.out.println("You can do the math to figure out how long it would take to simulate your desired amount of brackets.");
         System.out.println("You can also enter 0 to just print the win probability of the matches below.");
         System.out.println();
         System.out.print("Enter the amount of brackets to simulate: ");
+
+        // Get the amount of brackets to simulate based on user input
         int bracketsToSimulate = scanner.nextInt();
 
-        // Check how many teams are in the list
-        if (teams.size() != 16) {
+        // Validates team size for Standard brackets
+        if (standardBracket && teams.size() != 16) {
+            System.out.println();
             System.out.println("Invalid team count. Please make sure there are 16 teams in the list.");
             return;
         }
 
+        // Validates team size for Champions brackets
+        if (!standardBracket && teams.size() != 8) {
+            if (teams.size() >= 8) {
+                System.out.println();
+                System.out.println("Invalid team count; trimming the list to the first 8 teams.");
+                teams.subList(8, teams.size()).clear();
+            } else {
+                System.out.println();
+                System.out.println("Invalid team count. Please make sure there are 8 teams in the list.");
+                return;
+            }
+        }
+
         // Validate the input
-        if (bracketsToSimulate < 0 || bracketsToSimulate > 60000000) {
+        if (bracketsToSimulate < 0 || bracketsToSimulate > 50000000) {
             System.out.println("Invalid input. Please enter a number between 1 and 50,000,000.");
             return;
         } else {
             System.out.println("Simulating " + bracketsToSimulate + " brackets...");
 
             // Simulate the brackets
-            Bracket bracket = new Bracket(teams);
-            bracket.simulateMultipleBrackets(bracketsToSimulate);
+            if (standardBracket) {
+                StandardBracket bracket = new StandardBracket(teams);
+                bracket.simulateMultipleBrackets(bracketsToSimulate);
+            } else {
+                ChampionsBracket bracket = new ChampionsBracket(teams);
+                bracket.simulateMultipleBrackets(bracketsToSimulate);
+            }
         }
 
         // You can also display the winner of a match based on win probability
