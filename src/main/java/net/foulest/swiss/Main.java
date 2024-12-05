@@ -1,5 +1,5 @@
 /*
- * JavaTemplate - a fully featured Java template with Gradle.
+ * Swiss - a Monte Carlo bracket simulator for the CS2 Major.
  * Copyright (C) 2024 Foulest (https://github.com/Foulest)
  *
  * This program is free software: you can redistribute it and/or modify
