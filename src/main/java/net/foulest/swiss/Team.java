@@ -11,7 +11,10 @@ public class Team {
     private String name;
     private int seeding; // Higher number = better seed
     private int worldRanking; // Lower number = better rank
-    private double avgPlayerRating; // Average player rating
+
+    // The average player rating is calculated by adding each player's
+    // HLTV 2.1 rating from the past 3 months together and dividing by five
+    private double avgPlayerRating;
 
     // Method to get the Team object based on the team name
     public static @Nullable Team getTeamByName(String name) {
