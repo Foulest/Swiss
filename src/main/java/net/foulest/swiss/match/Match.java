@@ -26,6 +26,8 @@ import java.util.Random;
 
 /**
  * Represents a match between two teams.
+ *
+ * @author Foulest
  */
 @Data
 @AllArgsConstructor

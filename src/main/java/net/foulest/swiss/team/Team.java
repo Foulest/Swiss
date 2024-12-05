@@ -24,6 +24,8 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Represents a team in the tournament.
+ *
+ * @author Foulest
  */
 @Data
 @AllArgsConstructor

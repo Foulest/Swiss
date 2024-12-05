@@ -34,6 +34,8 @@ import java.util.concurrent.Executors;
  * In this bracket format, 16 teams play against each other in a Swiss format.
  * Every match is a BO1 until a team has a chance to be eliminated, at which point it becomes a BO3.
  * The top 8 teams advance to the Champions stage, while the bottom 8 teams are eliminated.
+ *
+ * @author Foulest
  */
 @Data
 public class ChampionsBracket {
