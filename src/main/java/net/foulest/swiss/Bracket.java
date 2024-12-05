@@ -4,35 +4,68 @@ import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Data
 class Bracket {
 
     private List<Team> teams;
-    // Pairwise 3-0
-    private Map<Team, Map<Team, Integer>> pairwise3_0 = new HashMap<>();
+    private long startingTime;
+    private static Map<Pair<Team, Team>, Integer> pairwise3_0Results = new HashMap<>();
+    private static Map<Pair<Team, Team>, Integer> pairwise0_3Results = new HashMap<>();
 
     Bracket(@NotNull List<Team> teams) {
         this.teams = teams;
+        startingTime = System.currentTimeMillis();
     }
 
+    /**
+     * Simulates multiple brackets.
+     *
+     * @param numSimulations The number of simulations to run.
+     */
     @SuppressWarnings("NestedMethodCall")
     void simulateMultipleBrackets(int numSimulations) {
         // Map to track results for each team
-        Map<Team, Map<String, Integer>> results = new HashMap<>();
+        Map<Team, Map<String, Integer>> results = new ConcurrentHashMap<>();
 
         // Initialize results map for each team
-        teams.forEach(team -> results.put(team, new HashMap<>()));
+        teams.forEach(team -> results.put(team, new ConcurrentHashMap<>()));
 
-        // Run simulations sequentially
+        // ExecutorService to manage threads
+        ExecutorService executor = Executors.newWorkStealingPool();
+
+        // Create tasks for simulations
+        List<Callable<Void>> tasks = new ArrayList<>();
         for (int i = 0; i < numSimulations; i++) {
-            simulateBracket(results); // Simulate one bracket
+            tasks.add(() -> {
+                simulateBracket(results); // Simulate one bracket
+                return null;
+            });
+        }
+
+        try {
+            // Execute all tasks and wait for completion
+            executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Simulation interrupted: " + e.getMessage());
+        } finally {
+            executor.shutdown();
         }
 
         // Analyze and print the results after all simulations are complete
-        printResults(results, numSimulations);
+        printResults(results, numSimulations, startingTime);
     }
 
+    /**
+     * Simulate a single bracket.
+     *
+     * @param results The results of the simulations.
+     */
     @SuppressWarnings("NestedMethodCall")
     private void simulateBracket(Map<Team, Map<String, Integer>> results) {
         Map<Team, int[]> records = new HashMap<>();
@@ -293,17 +326,36 @@ class Bracket {
             calculateBuchholz(activeTeams, pastOpponents, records, buchholzScores);
         }
 
+        List<Team> threeZeroTeams = new ArrayList<>();
+        List<Team> zeroThreeTeams = new ArrayList<>();
+
         // Record final results
         for (Map.Entry<Team, int[]> entry : records.entrySet()) {
             Team team = entry.getKey();
             int[] record = entry.getValue();
             String result = record[0] + "-" + record[1]; // Format: "XW-XL"
 
+            // Record the number of 3-0 and 0-3 teams
+            if (record[0] == 3 && record[1] == 0) {
+                threeZeroTeams.add(team);
+            }
+            if (record[1] == 3 && record[0] == 0) {
+                zeroThreeTeams.add(team);
+            }
+
             // Record the individual team's result (if needed)
             if (record[0] <= 3) {
                 results.get(team).put(result, results.get(team).getOrDefault(result, 0) + 1);
             }
         }
+
+        // Record pairwise results for 3-0
+        pairwise3_0Results.put(new Pair<>(threeZeroTeams.get(0), threeZeroTeams.get(1)),
+                pairwise3_0Results.getOrDefault(new Pair<>(threeZeroTeams.get(0), threeZeroTeams.get(1)), 0) + 1);
+
+        // Record pairwise results for 0-3
+        pairwise0_3Results.put(new Pair<>(zeroThreeTeams.get(0), zeroThreeTeams.get(1)),
+                pairwise0_3Results.getOrDefault(new Pair<>(zeroThreeTeams.get(0), zeroThreeTeams.get(1)), 0) + 1);
     }
 
     /**
@@ -404,6 +456,14 @@ class Bracket {
         }
     }
 
+    /**
+     * Get the teams with a specific record.
+     *
+     * @param records The records of each team.
+     * @param wins The number of wins.
+     * @param losses The number of losses.
+     * @return The list of teams with the specified record.
+     */
     private static @NotNull List<Team> getTeamsByRecord(@NotNull Map<Team, int[]> records,
                                                         int wins, int losses) {
         List<Team> group = new ArrayList<>();
@@ -416,6 +476,12 @@ class Bracket {
         return group;
     }
 
+    /**
+     * Sort the teams in the group by seeding first, then by Buchholz score, then by seeding.
+     *
+     * @param group The group of teams.
+     * @param buchholzScores The Buchholz score for each team.
+     */
     private static void sortTeams(@NotNull List<Team> group, Map<Team, Integer> buchholzScores) {
         // Sort the teams by seeding first
         group.sort(Comparator.comparingInt(Team::getSeeding));
@@ -431,6 +497,13 @@ class Bracket {
         });
     }
 
+    /**
+     * Print the match result.
+     *
+     * @param winner  The winning team.
+     * @param records The records of each team.
+     * @param loser   The losing team.
+     */
     private static void printMatchResult(@NotNull Team winner,
                                          @NotNull Map<Team, int[]> records,
                                          @NotNull Team loser) {
@@ -444,16 +517,38 @@ class Bracket {
                 + " beat " + loserName + " (" + loserRecords[0] + "-" + loserRecords[1] + ")");
     }
 
+    /**
+     * Update the records for each team.
+     *
+     * @param records The records of each team.
+     * @param winner The winning team.
+     * @param loser The losing team.
+     */
     private static void updateRecords(@NotNull Map<Team, int[]> records, Team winner, Team loser) {
         records.get(winner)[0] += 1;
         records.get(loser)[1] += 1;
     }
 
+    /**
+     * Update the past opponents for each team.
+     *
+     * @param pastOpponents The past opponents for each team.
+     * @param winner The winning team.
+     * @param loser The losing team.
+     */
     private static void updatePastOpponents(@NotNull Map<Team, List<Team>> pastOpponents, Team winner, Team loser) {
         pastOpponents.get(winner).add(loser);
         pastOpponents.get(loser).add(winner);
     }
 
+    /**
+     * Calculate the Buchholz score for each team.
+     *
+     * @param activeTeams The list of active teams.
+     * @param pastOpponents The past opponents for each team.
+     * @param records The records of each team.
+     * @param buchholzScores The Buchholz score for each team.
+     */
     private static void calculateBuchholz(@NotNull List<Team> activeTeams,
                                           Map<Team, List<Team>> pastOpponents,
                                           Map<Team, int[]> records,
@@ -472,6 +567,13 @@ class Bracket {
         }
     }
 
+    /**
+     * Check if all teams have been decided.
+     *
+     * @param activeTeams The list of active teams.
+     * @param records The records of each team.
+     * @return True if all teams have either 3 wins or 3 losses, false otherwise.
+     */
     private static boolean allTeamsDecided(@NotNull List<Team> activeTeams, Map<Team, int[]> records) {
         for (Team team : activeTeams) {
             int[] record = records.get(team);
@@ -483,8 +585,19 @@ class Bracket {
         return true; // All teams have either 3 wins or 3 losses
     }
 
-    @SuppressWarnings("NestedMethodCall")
-    private static void printResults(@NotNull Map<Team, Map<String, Integer>> results, int numSimulations) {
+    /**
+     * Print the results of the simulations.
+     *
+     * @param results         The results of the simulations.
+     * @param numSimulations  The number of simulations.
+     */
+    private static void printResults(@NotNull Map<Team, Map<String, Integer>> results,
+                                     int numSimulations, long startingTime) {
+        long duration = System.currentTimeMillis() - startingTime;
+        double seconds = duration / 1000.0;
+
+        System.out.println();
+        System.out.println("Results after " + numSimulations + " simulations (took " + seconds + " seconds):");
         System.out.println();
         System.out.println("Individual Team Results:");
 
@@ -492,38 +605,76 @@ class Bracket {
             Team team = entry.getKey();
             Map<String, Integer> recordCounts = entry.getValue();
 
-            // Create a map to combine probabilities for 3-X and X-3
-            double probability3X = 0.0;
-            double probabilityX3 = 0.0;
-
-            // Combine the 3-1 and 3-2 probabilities into 3-X
-            probability3X += (recordCounts.getOrDefault("3-1", 0)
+            // Calculate combined probabilities
+            double probability3X = (recordCounts.getOrDefault("3-1", 0)
                     + recordCounts.getOrDefault("3-2", 0)) * 100.0 / numSimulations;
-
-            // Combine the 1-3 and 2-3 probabilities into X-3
-            probabilityX3 += (recordCounts.getOrDefault("1-3", 0)
+            double probabilityX3 = (recordCounts.getOrDefault("1-3", 0)
                     + recordCounts.getOrDefault("2-3", 0)) * 100.0 / numSimulations;
 
-            // Prepare the result string
+            // Build the result string
             String teamName = team.getName();
-            StringBuilder resultString = new StringBuilder("Team: " + teamName + " | ");
+            StringBuilder resultString = new StringBuilder(String.format("Team: %s | 3-X (%.2f%%) X-3 (%.2f%%) ",
+                    teamName, probability3X, probabilityX3));
 
-            // Add the combined 3-X and X-3 probabilities to the result string
-            resultString.append("3-X (").append(String.format("%.2f", probability3X)).append("%) ");
-            resultString.append("X-3 (").append(String.format("%.2f", probabilityX3)).append("%) ");
-
-            // Add the individual probabilities for 3-0, 0-3, and 3-1/3-2, 1-3/2-3
-            if (recordCounts.containsKey("3-0")) {
-                double probability3_0 = (recordCounts.getOrDefault("3-0", 0) * 100.0) / numSimulations;
-                resultString.append("3-0 (").append(String.format("%.2f", probability3_0)).append("%) ");
-            }
-            if (recordCounts.containsKey("0-3")) {
-                double probability0_3 = (recordCounts.getOrDefault("0-3", 0) * 100.0) / numSimulations;
-                resultString.append("0-3 (").append(String.format("%.2f", probability0_3)).append("%) ");
-            }
+            // Add individual probabilities
+            appendProbability(resultString, "3-0", recordCounts, numSimulations);
+            appendProbability(resultString, "0-3", recordCounts, numSimulations);
 
             // Print the team's result
             System.out.println(resultString.toString().trim());
+        }
+
+        System.out.println();
+
+        // Print most common pairs for 3-0 and 0-3
+        printMostCommonPair("3-0", pairwise3_0Results, numSimulations);
+        printMostCommonPair("0-3", pairwise0_3Results, numSimulations);
+    }
+
+    /**
+     * Append a probability to the result string if it exists.
+     *
+     * @param resultString The result string to append to.
+     * @param record The record to check for.
+     * @param recordCounts The record counts for the team.
+     * @param numSimulations The number of simulations.
+     */
+    private static void appendProbability(StringBuilder resultString, String record,
+                                          @NotNull Map<String, Integer> recordCounts,
+                                          int numSimulations) {
+        if (recordCounts.containsKey(record)) {
+            double probability = recordCounts.get(record) * 100.0 / numSimulations;
+            resultString.append(String.format("%s (%.2f%%) ", record, probability));
+        }
+    }
+
+    /**
+     * Find and print the most common pair for a given record type.
+     *
+     * @param label The label for the record type. (e.g., "3-0" or "0-3")
+     * @param pairResults The results for the pair.
+     * @param numSimulations The number of simulations.
+     */
+    private static void printMostCommonPair(String label,
+                                            @NotNull Map<Pair<Team, Team>, Integer> pairResults,
+                                            int numSimulations) {
+        Pair<Team, Team> mostCommonPair = null;
+        int maxCount = 0;
+
+        for (Map.Entry<Pair<Team, Team>, Integer> entry : pairResults.entrySet()) {
+            if (entry.getValue() > maxCount) {
+                maxCount = entry.getValue();
+                mostCommonPair = entry.getKey();
+            }
+        }
+
+        if (mostCommonPair != null) {
+            System.out.printf("Most Common %s Pair: %s and %s (%d times / %d simulations)%n",
+                    label,
+                    mostCommonPair.getFirst().getName(),
+                    mostCommonPair.getLast().getName(),
+                    maxCount,
+                    numSimulations);
         }
     }
 }
