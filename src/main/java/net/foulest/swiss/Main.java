@@ -21,6 +21,8 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
 
 /**
  * Main class for the program.
@@ -38,6 +40,7 @@ public final class Main {
      * @param args The program's arguments.
      */
     public static void main(String[] args) {
+        // Create teams with data from HLTV
         Team g2 = new Team("G2", 1, 2, 1.046);
         Team natusVincere = new Team("Natus Vincere", 2, 1, 1.098);
         Team vitality = new Team("Vitality", 3, 3, 1.110);
@@ -55,6 +58,7 @@ public final class Main {
         Team big = new Team("BIG", 15, 19, 1.060);
         Team mibr = new Team("MIBR", 16, 17, 1.064);
 
+        // Add teams to the list
         teams.add(g2);
         teams.add(natusVincere);
         teams.add(vitality);
@@ -72,9 +76,43 @@ public final class Main {
         teams.add(big);
         teams.add(mibr);
 
-        // At 1,000,000 simulations, the data is as accurate as it can be.
-        // On average, the default simulation of 1,000,000 brackets takes 60 seconds.
-        Bracket bracket = new Bracket(teams);
-        bracket.simulateMultipleBrackets(1000000);
+        // Get the amount of brackets to simulate based on user input
+        Scanner scanner = new Scanner(System.in, "UTF-8").useLocale(Locale.ROOT);
+        System.out.println("Swiss - CS2 Major Monte Carlo Simulation");
+        System.out.println("by Foulest | github.com/Foulest");
+        System.out.println();
+        System.out.println("Note: At 25,000,000 simulations, the data is as accurate as it can be.");
+        System.out.println("Anything beyond that would be computationally expensive and unnecessary.");
+        System.out.println("On average, every iteration of simulating 1,000,000 brackets takes 7.5 seconds.");
+        System.out.println("You can do the math to figure out how long it would take to simulate your desired amount of brackets.");
+        System.out.println("You can also enter 0 to just print the win probability of the matches below.");
+        System.out.println();
+        System.out.print("Enter the amount of brackets to simulate: ");
+        int bracketsToSimulate = scanner.nextInt();
+
+        // Validate the input
+        if (bracketsToSimulate < 0 || bracketsToSimulate > 60000000) {
+            System.out.println("Invalid input. Please enter a number between 1 and 50,000,000.");
+            return;
+        } else {
+            System.out.println("Simulating " + bracketsToSimulate + " brackets...");
+
+            // Simulate the brackets
+            Bracket bracket = new Bracket(teams);
+            bracket.simulateMultipleBrackets(bracketsToSimulate);
+        }
+
+        // You can also display the winner of a match based on win probability
+        // instead of simulating the entire bracket.
+        if (bracketsToSimulate == 0) {
+            Match.displayWinnerFromProbability(natusVincere, mibr);
+            Match.displayWinnerFromProbability(vitality, furia);
+            Match.displayWinnerFromProbability(mouz, theMongolZ);
+            Match.displayWinnerFromProbability(faze, heroic);
+            Match.displayWinnerFromProbability(g2, big);
+            Match.displayWinnerFromProbability(spirit, wildcard);
+            Match.displayWinnerFromProbability(_3DMAX, paiN);
+            Match.displayWinnerFromProbability(liquid, gamerLegion);
+        }
     }
 }
