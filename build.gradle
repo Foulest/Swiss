@@ -5,14 +5,14 @@ plugins {
     id 'java'
 }
 
-group = 'net.foulest' // TODO: Change this to your group
-version = '1.0.0' // TODO: Change this to your version
-description = 'JavaTemplate' // TODO: Change this to your description
+group = 'net.foulest'
+version = '1.0.0'
+description = 'Swiss'
 
 // Set the project's language level
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(8)) // TODO: Change this to your Java version
+        languageVersion.set(JavaLanguageVersion.of(8))
     }
 }
 
@@ -45,12 +45,12 @@ tasks {
 
         // Set the 'Main-Class' attribute in the JAR manifest
         manifest {
-            attributes 'Main-Class': 'net.foulest.template.Main' // TODO: Change this to your main class
+            attributes 'Main-Class': 'net.foulest.swiss.Main'
         }
     }
 
     shadowJar {
-        mainClassName = 'net.foulest.template.Main' // TODO: Change this to your main class
+        mainClassName = 'net.foulest.swiss.Main'
         archiveFileName.set("${project.name}-${project.version}.jar")
     }
 
@@ -87,7 +87,7 @@ tasks {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'net.foulest.template' // TODO: Change this to your group
+            groupId = 'net.foulest.swiss'
             artifactId = project.name
             version = project.version
 

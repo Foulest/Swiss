@@ -3,7 +3,7 @@ name: Report a bug
 about: Create a report to help us improve.
 title: ''
 labels: 'bug'
-assignees: 'Foulest' # TODO: Change this to your username
+assignees: 'Foulest'
 
 ---
 

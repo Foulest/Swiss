@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest an idea for this project.
 title: ''
 labels: 'request'
-assignees: 'Foulest' # TODO: Change this to your username
+assignees: 'Foulest'
 
 ---
 
