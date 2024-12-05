@@ -285,10 +285,16 @@ class Bracket {
                         }
                     }
 
+                    // Determine if the matchup should be best-of-three
+                    boolean bestOfThree = records.get(team)[0] == 2 || records.get(team)[1] == 2;
+
+                    // Create the match if an ideal matchup exists
                     if (idealMatchup != null) {
-                        Match match = new Match(team, idealMatchup, true);
+                        Match match = new Match(team, idealMatchup, bestOfThree);
                         matches.add(match);
                         availableTeams.remove(idealMatchup);
+                    } else {
+                        System.err.println("No ideal matchup found for: " + team.getName());
                     }
                 }
 
