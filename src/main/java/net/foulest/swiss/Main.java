@@ -90,6 +90,12 @@ public final class Main {
         System.out.print("Enter the amount of brackets to simulate: ");
         int bracketsToSimulate = scanner.nextInt();
 
+        // Check how many teams are in the list
+        if (teams.size() != 16) {
+            System.out.println("Invalid team count. Please make sure there are 16 teams in the list.");
+            return;
+        }
+
         // Validate the input
         if (bracketsToSimulate < 0 || bracketsToSimulate > 60000000) {
             System.out.println("Invalid input. Please enter a number between 1 and 50,000,000.");
