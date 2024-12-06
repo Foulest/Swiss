@@ -20,7 +20,6 @@ package net.foulest.swiss.brackets;
 import lombok.Data;
 import net.foulest.swiss.match.Match;
 import net.foulest.swiss.team.Team;
-import net.foulest.swiss.util.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -44,10 +43,6 @@ public class StandardBracket implements Bracket {
 
     private List<Team> teams;
     private long startingTime;
-
-    // Pairwise results for 3-0 and 0-3 teams
-    private static Map<Pair<Team, Team>, Integer> pairwise3_0 = new HashMap<>();
-    private static Map<Pair<Team, Team>, Integer> pairwise0_3 = new HashMap<>();
 
     public StandardBracket(@NotNull List<Team> teams) {
         this.teams = teams;
@@ -324,36 +319,17 @@ public class StandardBracket implements Bracket {
             calculateBuchholz(activeTeams, pastOpponents, records, buchholzScores);
         }
 
-        List<Team> threeZeroTeams = new ArrayList<>();
-        List<Team> zeroThreeTeams = new ArrayList<>();
-
         // Record final results
         for (Map.Entry<Team, int[]> entry : records.entrySet()) {
             Team team = entry.getKey();
             int[] record = entry.getValue();
             String result = record[0] + "-" + record[1]; // Format: "XW-XL"
 
-            // Record the number of 3-0 and 0-3 teams
-            if (record[0] == 3 && record[1] == 0) {
-                threeZeroTeams.add(team);
-            }
-            if (record[1] == 3 && record[0] == 0) {
-                zeroThreeTeams.add(team);
-            }
-
             // Record the individual team's result (if needed)
             if (record[0] <= 3) {
                 results.get(team).put(result, results.get(team).getOrDefault(result, 0) + 1);
             }
         }
-
-        // Record pairwise results for 3-0
-        pairwise3_0.put(new Pair<>(threeZeroTeams.get(0), threeZeroTeams.get(1)),
-                pairwise3_0.getOrDefault(new Pair<>(threeZeroTeams.get(0), threeZeroTeams.get(1)), 0) + 1);
-
-        // Record pairwise results for 0-3
-        pairwise0_3.put(new Pair<>(zeroThreeTeams.get(0), zeroThreeTeams.get(1)),
-                pairwise0_3.getOrDefault(new Pair<>(zeroThreeTeams.get(0), zeroThreeTeams.get(1)), 0) + 1);
     }
 
     /**
@@ -601,42 +577,6 @@ public class StandardBracket implements Bracket {
 
             // Print the team's result
             System.out.println(resultString.toString().trim());
-        }
-
-        System.out.println();
-
-        // Print most common pairs for 3-0 and 0-3
-        printMostCommonPair("3-0", pairwise3_0, numSimulations);
-        printMostCommonPair("0-3", pairwise0_3, numSimulations);
-    }
-
-    /**
-     * Find and print the most common pair for a given record type.
-     *
-     * @param label The label for the record type. (e.g., "3-0" or "0-3")
-     * @param pairResults The results for the pair.
-     * @param numSimulations The number of simulations.
-     */
-    private static void printMostCommonPair(String label,
-                                            @NotNull Map<Pair<Team, Team>, Integer> pairResults,
-                                            int numSimulations) {
-        Pair<Team, Team> mostCommonPair = null;
-        int maxCount = 0;
-
-        for (Map.Entry<Pair<Team, Team>, Integer> entry : pairResults.entrySet()) {
-            if (entry.getValue() > maxCount) {
-                maxCount = entry.getValue();
-                mostCommonPair = entry.getKey();
-            }
-        }
-
-        if (mostCommonPair != null) {
-            System.out.printf("Most Common %s Pair: %s and %s (%d times / %d simulations)%n",
-                    label,
-                    mostCommonPair.getFirst().getName(),
-                    mostCommonPair.getLast().getName(),
-                    maxCount,
-                    numSimulations);
         }
     }
 }
