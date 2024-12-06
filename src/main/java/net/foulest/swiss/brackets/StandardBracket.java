@@ -44,6 +44,10 @@ public class StandardBracket implements Bracket {
     private List<Team> teams;
     private long startingTime;
 
+    // For special conditions, like a team reaching a certain round
+    int specialReached;
+    int specialSuccess;
+
     public StandardBracket(@NotNull List<Team> teams) {
         this.teams = teams;
         startingTime = System.currentTimeMillis();
@@ -85,7 +89,7 @@ public class StandardBracket implements Bracket {
         }
 
         // Analyze and print the results after all simulations are complete
-        printResults(results, numSimulations, startingTime);
+        printResults(results, numSimulations, startingTime, specialReached, specialSuccess);
     }
 
     /**
@@ -130,7 +134,7 @@ public class StandardBracket implements Bracket {
             updateTeamRatings(team1, team2, winner, match.getMaxRounds() == 3);
 
             // Update records
-            updateRecords(records, winner, loser);
+            Bracket.updateRecords(records, winner, loser);
 
             // Update past opponents
             updatePastOpponents(pastOpponents, winner, loser);
@@ -288,7 +292,7 @@ public class StandardBracket implements Bracket {
                     updateTeamRatings(team1, team2, winner, match.getMaxRounds() == 3);
 
                     // Update records
-                    updateRecords(records, winner, loser);
+                    Bracket.updateRecords(records, winner, loser);
 
                     // Update past opponents
                     updatePastOpponents(pastOpponents, winner, loser);
@@ -468,25 +472,18 @@ public class StandardBracket implements Bracket {
 
         // Sort the teams by Buchholz score, then by seeding
         group.sort((team1, team2) -> {
-            int buchholzComparison = Integer.compare(buchholzScores.get(team2), buchholzScores.get(team1));
+            Integer t2Score = buchholzScores.get(team2);
+            Integer t1Score = buchholzScores.get(team1);
+            int buchholzComparison = Integer.compare(t2Score, t1Score);
 
             if (buchholzComparison != 0) {
                 return buchholzComparison;
             }
-            return Integer.compare(team1.getSeeding(), team2.getSeeding());
-        });
-    }
 
-    /**
-     * Update the records for each team.
-     *
-     * @param records The records of each team.
-     * @param winner The winning team.
-     * @param loser The losing team.
-     */
-    private static void updateRecords(@NotNull Map<Team, int[]> records, Team winner, Team loser) {
-        records.get(winner)[0] += 1;
-        records.get(loser)[1] += 1;
+            int t1Seeding = team1.getSeeding();
+            int t2Seeding = team2.getSeeding();
+            return Integer.compare(t1Seeding, t2Seeding);
+        });
     }
 
     /**
@@ -548,11 +545,12 @@ public class StandardBracket implements Bracket {
     /**
      * Print the results of the simulations.
      *
-     * @param results         The results of the simulations.
-     * @param numSimulations  The number of simulations.
+     * @param results        The results of the simulations.
+     * @param numSimulations The number of simulations.
      */
     private static void printResults(@NotNull Map<Team, Map<String, Integer>> results,
-                                     int numSimulations, long startingTime) {
+                                     int numSimulations, long startingTime,
+                                     int specialReached, int specialSuccess) {
         // Print the header
         Bracket.printHeader(numSimulations, startingTime);
 
@@ -576,7 +574,17 @@ public class StandardBracket implements Bracket {
             Bracket.appendProbability(resultString, "0-3", recordCounts, numSimulations);
 
             // Print the team's result
-            System.out.println(resultString.toString().trim());
+            String result = resultString.toString();
+            String trimmed = result.trim();
+            System.out.println(trimmed);
+        }
+
+        // Print special conditions
+        if (specialReached > 0) {
+            System.out.println();
+            System.out.println("Special Reached: " + specialReached);
+            System.out.println("Special Success: " + specialSuccess);
+            System.out.println("Special Odds: " + (specialSuccess * 100.0 / specialReached) + "%");
         }
     }
 }
