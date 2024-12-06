@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * Represents a bracket for the Challengers & Legends stages of the CS2 Major.
@@ -38,7 +39,7 @@ import java.util.concurrent.Executors;
  * @author Foulest
  */
 @Data
-public class ChampionsBracket {
+public class ChampionsBracket implements Bracket {
 
     private List<Team> teams;
     private long startingTime;
@@ -105,7 +106,9 @@ public class ChampionsBracket {
         List<Team> seededTeams = new ArrayList<>(teams);
         seededTeams.sort(Comparator.comparingInt(Team::getSeeding));
 
-        List<Team> activeTeams = new ArrayList<>(seededTeams); // All teams start active
+        List<Team> activeTeams = seededTeams.stream()
+                .map(Team::clone) // Clone or copy each team
+                .collect(Collectors.toList());
 
         // Simulate each round, eliminating teams that lose
         while (activeTeams.size() > 1) {
@@ -115,14 +118,19 @@ public class ChampionsBracket {
             for (int i = 0; i < activeTeams.size() / 2; i++) {
                 Team team1 = activeTeams.get(i); // Lower seed
                 Team team2 = activeTeams.get(activeTeams.size() - 1 - i); // Higher seed
+
+                // Create a match between the two teams
                 Match match = new Match(team1, team2, 1); // Best of 1 match
 
-                // Simulate match
+                // Simulate the match
                 Team winner = match.simulate(false);
                 Team loser = (winner == team1) ? team2 : team1;
 
+                // Update team ratings
+                updateTeamRatings(team1, team2, winner, false);
+
                 // Update records
-                updateRecords(records, winner, loser);
+                Bracket.updateRecords(records, winner, loser);
 
 //                // Print the match result
 //                printMatchResult(winner, records, loser);
@@ -150,50 +158,31 @@ public class ChampionsBracket {
             // Record every team's final record
             results.get(team).merge(result, 1, Integer::sum);
         }
+
+//        // Print the rating change for each team
+//        printRatingChange(initialRatings, records);
     }
 
     /**
-     * Print the match result.
+     * Print the rating change for each team.
      *
-     * @param winner  The winning team.
-     * @param records The records of each team.
-     * @param loser   The losing team.
+     * @param initialRatings The initial ratings of each team.
+     * @param records       The records of each team.
      */
-    private static void printMatchResult(@NotNull Team winner,
-                                         @NotNull Map<Team, int[]> records,
-                                         @NotNull Team loser) {
-        String winnerName = winner.getName();
-        String loserName = loser.getName();
+    private static void printRatingChange(@NotNull Map<Team, Double> initialRatings, Map<Team, int[]> records) {
+        System.out.println();
 
-        int[] winnerRecords = records.get(winner);
-        int[] loserRecords = records.get(loser);
+        for (Map.Entry<Team, Double> entry : initialRatings.entrySet()) {
+            Team team = entry.getKey();
+            double initialRating = initialRatings.get(team);
+            double finalRating = team.getAvgPlayerRating();
+            double ratingChange = finalRating - initialRating;
+            String teamName = team.getName();
 
-        System.out.println(winnerName + " (" + winnerRecords[0] + "-" + winnerRecords[1] + ")"
-                + " beat " + loserName + " (" + loserRecords[0] + "-" + loserRecords[1] + ")");
-    }
-
-    /**
-     * Update the records for each team.
-     *
-     * @param records The records of each team.
-     * @param winner The winning team.
-     * @param loser The losing team.
-     */
-    private static void updateRecords(@NotNull Map<Team, int[]> records, Team winner, Team loser) {
-        records.get(winner)[0] += 1;
-        records.get(loser)[1] += 1;
-    }
-
-    /**
-     * Update the past opponents for each team.
-     *
-     * @param pastOpponents The past opponents for each team.
-     * @param winner The winning team.
-     * @param loser The losing team.
-     */
-    private static void updatePastOpponents(@NotNull Map<Team, List<Team>> pastOpponents, Team winner, Team loser) {
-        pastOpponents.get(winner).add(loser);
-        pastOpponents.get(loser).add(winner);
+            System.out.println(teamName + " (" + records.get(team)[0] + "-" + records.get(team)[1] + ")"
+                    + " started with a rating of " + initialRating
+                    + " and ended with a rating of " + finalRating + " (" + ratingChange + ")");
+        }
     }
 
     /**
@@ -204,13 +193,8 @@ public class ChampionsBracket {
      */
     private static void printResults(@NotNull Map<Team, Map<String, Integer>> results,
                                      int numSimulations, long startingTime) {
-        long duration = System.currentTimeMillis() - startingTime;
-        double seconds = duration / 1000.0;
-
-        System.out.println();
-        System.out.println("Results after " + numSimulations + " simulations (took " + seconds + " seconds):");
-        System.out.println();
-        System.out.println("Individual Team Results:");
+        // Print the header
+        Bracket.printHeader(numSimulations, startingTime);
 
         for (Map.Entry<Team, Map<String, Integer>> entry : results.entrySet()) {
             Team team = entry.getKey();
@@ -221,30 +205,13 @@ public class ChampionsBracket {
             StringBuilder resultString = new StringBuilder(String.format("Team: %s | ", teamName));
 
             // Add individual probabilities
-            appendProbability(resultString, "3-0", recordCounts, numSimulations);
-            appendProbability(resultString, "2-1", recordCounts, numSimulations);
-            appendProbability(resultString, "1-1", recordCounts, numSimulations);
-            appendProbability(resultString, "0-1", recordCounts, numSimulations);
+            Bracket.appendProbability(resultString, "3-0", recordCounts, numSimulations);
+            Bracket.appendProbability(resultString, "2-1", recordCounts, numSimulations);
+            Bracket.appendProbability(resultString, "1-1", recordCounts, numSimulations);
+            Bracket.appendProbability(resultString, "0-1", recordCounts, numSimulations);
 
             // Print the team's result
             System.out.println(resultString.toString().trim());
-        }
-    }
-
-    /**
-     * Append a probability to the result string if it exists.
-     *
-     * @param resultString The result string to append to.
-     * @param record The record to check for.
-     * @param recordCounts The record counts for the team.
-     * @param numSimulations The number of simulations.
-     */
-    private static void appendProbability(StringBuilder resultString, String record,
-                                          @NotNull Map<String, Integer> recordCounts,
-                                          int numSimulations) {
-        if (recordCounts.containsKey(record)) {
-            double probability = recordCounts.get(record) * 100.0 / numSimulations;
-            resultString.append(String.format("%s (%.2f%%) ", record, probability));
         }
     }
 }

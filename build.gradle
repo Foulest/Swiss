@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'net.foulest'
-version = '1.0.0'
+version = '1.0.1'
 description = 'Swiss'
 
 // Set the project's language level

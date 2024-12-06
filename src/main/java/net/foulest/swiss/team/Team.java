@@ -22,6 +22,8 @@ import lombok.Data;
 import net.foulest.swiss.Swiss;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * Represents a team in the tournament.
  *
@@ -29,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
  */
 @Data
 @AllArgsConstructor
-public class Team {
+public class Team implements Cloneable {
 
     private String name;
     private int seeding; // Higher number = better seed
@@ -47,5 +49,25 @@ public class Team {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Team team = (Team) o;
+        return Objects.equals(name, team.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(name);
+    }
+
+    @Override
+    public Team clone() {
+        return new Team(name, worldRanking, seeding, avgPlayerRating);
     }
 }

@@ -86,6 +86,7 @@ public final class Swiss {
         System.out.println("by Foulest | github.com/Foulest");
         System.out.println();
         System.out.println("Choose the bracket to simulate:");
+        System.out.println("0. Manual Matches");
         System.out.println("1. Standard Bracket");
         System.out.println("2. Champions Bracket");
         System.out.println();
@@ -94,8 +95,17 @@ public final class Swiss {
         // Get whether to simulate Standard or Champions bracket
         int bracketNumber = scanner.nextInt();
 
-        if (bracketNumber != 1 && bracketNumber != 2) {
-            System.out.println("Invalid input. Please enter 1 or 2.");
+        // Validate the input
+        if (bracketNumber != 0 && bracketNumber != 1 && bracketNumber != 2) {
+            System.out.println("Invalid input. Please enter 0, 1 or 2.");
+            return;
+        }
+
+        // You can also display the winner of a match based on win probability
+        // instead of simulating the entire bracket (these are just examples).
+        if (bracketNumber == 0) {
+            Match.displayWinnerFromProbability(theMongolZ, heroic, false);
+            Match.displayWinnerFromProbability(theMongolZ, mibr, true);
             return;
         }
 
@@ -107,7 +117,7 @@ public final class Swiss {
         System.out.println("On average, for Standard brackets, every 1,000,000 simulations takes 7.5 seconds.");
         System.out.println("On average, for Champions brackets, every 1,000,000 simulations takes 1.5 seconds.");
         System.out.println("You can do the math to figure out how long it would take to simulate your desired amount of brackets.");
-        System.out.println("You can also enter 0 to just print the win probability of the matches below.");
+
         System.out.println();
         System.out.print("Enter the amount of brackets to simulate: ");
 
@@ -135,9 +145,8 @@ public final class Swiss {
         }
 
         // Validate the input
-        if (bracketsToSimulate < 0 || bracketsToSimulate > 50000000) {
+        if (bracketsToSimulate <= 0 || bracketsToSimulate > 50000000) {
             System.out.println("Invalid input. Please enter a number between 1 and 50,000,000.");
-            return;
         } else {
             System.out.println("Simulating " + bracketsToSimulate + " brackets...");
 
@@ -149,19 +158,6 @@ public final class Swiss {
                 ChampionsBracket bracket = new ChampionsBracket(teams);
                 bracket.simulateMultipleBrackets(bracketsToSimulate);
             }
-        }
-
-        // You can also display the winner of a match based on win probability
-        // instead of simulating the entire bracket.
-        if (bracketsToSimulate == 0) {
-            Match.displayWinnerFromProbability(natusVincere, mibr);
-            Match.displayWinnerFromProbability(vitality, furia);
-            Match.displayWinnerFromProbability(mouz, theMongolZ);
-            Match.displayWinnerFromProbability(faze, heroic);
-            Match.displayWinnerFromProbability(g2, big);
-            Match.displayWinnerFromProbability(spirit, wildcard);
-            Match.displayWinnerFromProbability(_3DMAX, paiN);
-            Match.displayWinnerFromProbability(liquid, gamerLegion);
         }
     }
 }

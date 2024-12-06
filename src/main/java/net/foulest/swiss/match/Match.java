@@ -46,7 +46,7 @@ public class Match {
     public Team simulate(boolean mostLikelyOnly) {
         int team1Wins = 0;
         int team2Wins = 0;
-        double winProbability = calculateWinProbability(team1, team2);
+        double winProbability = calculateWinProbability(team1, team2, maxRounds == 3);
 
         // Return the most likely winner only
         if (mostLikelyOnly) {
@@ -72,17 +72,23 @@ public class Match {
 
     /**
      * Calculates the win probability of a team against another team.
-     * - 20% of the win probability is based on the team's world ranking.
-     * - 80% of the win probability is based on the team's average player rating.
+     * <p>
+     * If the match is the best of one:
+     * - 30% of the win probability is based on the team's world ranking.
+     * - 70% of the win probability is based on the team's average player rating.
+     * <p>
+     * If the match is the best of three:
+     * - 50% of the win probability is based on the team's world ranking.
+     * - 50% of the win probability is based on the team's average player rating.
      *
      * @param t1 The first team.
      * @param t2 The second team.
      * @return The win probability of the first team.
      */
-    private static double calculateWinProbability(@NotNull Team t1, @NotNull Team t2) {
-        final double worldRankingWeight = 0.20 / 100.0; // Precompute constant
-        final double playerRatingWeight = 0.80;
-        final double scale = 5.0;
+    public static double calculateWinProbability(@NotNull Team t1, @NotNull Team t2, boolean bestOfThree) {
+        double worldRankingWeight = bestOfThree ? 0.50 / 100.0 : 0.30 / 100.0;
+        double playerRatingWeight = bestOfThree ? 0.50 : 0.70;
+        double scale = 5.0;
 
         // Compute scores
         double t1Score = worldRankingWeight * (100.0 - t1.getWorldRanking()) + playerRatingWeight * t1.getAvgPlayerRating();
@@ -98,8 +104,8 @@ public class Match {
      * @param t1 The first team.
      * @param t2 The second team.
      */
-    public static void displayWinnerFromProbability(@NotNull Team t1, @NotNull Team t2) {
-        double winProbability = calculateWinProbability(t1, t2);
+    public static void displayWinnerFromProbability(@NotNull Team t1, @NotNull Team t2, boolean bestOfThree) {
+        double winProbability = calculateWinProbability(t1, t2, bestOfThree);
         String t1Name = t1.getName();
         String t2Name = t2.getName();
 
