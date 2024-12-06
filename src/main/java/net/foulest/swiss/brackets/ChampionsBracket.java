@@ -178,8 +178,9 @@ public class ChampionsBracket implements Bracket {
             double finalRating = team.getAvgPlayerRating();
             double ratingChange = finalRating - initialRating;
             String teamName = team.getName();
+            int[] teamRecords = records.get(team);
 
-            System.out.println(teamName + " (" + records.get(team)[0] + "-" + records.get(team)[1] + ")"
+            System.out.println(teamName + " (" + teamRecords[0] + "-" + teamRecords[1] + ")"
                     + " started with a rating of " + initialRating
                     + " and ended with a rating of " + finalRating + " (" + ratingChange + ")");
         }
@@ -211,7 +212,9 @@ public class ChampionsBracket implements Bracket {
             Bracket.appendProbability(resultString, "0-1", recordCounts, numSimulations);
 
             // Print the team's result
-            System.out.println(resultString.toString().trim());
+            String result = resultString.toString();
+            String trimmed = result.trim();
+            System.out.println(trimmed);
         }
     }
 }

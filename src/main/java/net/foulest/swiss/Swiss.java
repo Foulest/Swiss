@@ -104,8 +104,7 @@ public final class Swiss {
         // You can also display the winner of a match based on win probability
         // instead of simulating the entire bracket (these are just examples).
         if (bracketNumber == 0) {
-            Match.displayWinnerFromProbability(theMongolZ, heroic, false);
-            Match.displayWinnerFromProbability(theMongolZ, mibr, true);
+            Match.displayWinnerFromProbability(wildcard, gamerLegion, true);
             return;
         }
 
@@ -123,22 +122,23 @@ public final class Swiss {
 
         // Get the amount of brackets to simulate based on user input
         int bracketsToSimulate = scanner.nextInt();
+        int teamsSize = teams.size();
 
         // Validates team size for Standard brackets
-        if (standardBracket && teams.size() != 16) {
+        if (standardBracket && teamsSize != 16) {
             System.out.println();
             System.out.println("Invalid team count. Please make sure there are 16 teams in the list.");
             return;
         }
 
         // Validates team size for Champions brackets
-        if (!standardBracket && teams.size() != 8) {
-            if (teams.size() >= 8) {
-                System.out.println();
+        if (!standardBracket && teamsSize != 8) {
+            System.out.println();
+
+            if (teamsSize >= 8) {
                 System.out.println("Invalid team count; trimming the list to the first 8 teams.");
-                teams.subList(8, teams.size()).clear();
+                teams.subList(8, teamsSize).clear();
             } else {
-                System.out.println();
                 System.out.println("Invalid team count. Please make sure there are 8 teams in the list.");
                 return;
             }
