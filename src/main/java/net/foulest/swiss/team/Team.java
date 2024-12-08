@@ -34,8 +34,9 @@ import java.util.Objects;
 public class Team implements Cloneable {
 
     private String name;
-    private int seeding; // Higher number = better seed
     private int worldRanking; // Lower number = better rank
+    private int seeding; // Higher number = better seed
+    private int championSeed; // Where the team is seeded in the championship bracket
 
     // The average player rating is calculated by adding each player's
     // HLTV 2.1 rating from the past 3 months together and dividing by five
@@ -68,6 +69,6 @@ public class Team implements Cloneable {
 
     @Override
     public Team clone() {
-        return new Team(name, worldRanking, seeding, avgPlayerRating);
+        return new Team(name, worldRanking, seeding, championSeed, avgPlayerRating);
     }
 }

@@ -102,9 +102,9 @@ public class ChampionsBracket implements Bracket {
             records.put(team, new int[]{0, 0}); // [wins, losses]
         }
 
-        // Sort teams by their seeding in ascending order
+        // Sort teams by their champion seeding in ascending order
         List<Team> seededTeams = new ArrayList<>(teams);
-        seededTeams.sort(Comparator.comparingInt(Team::getSeeding));
+        seededTeams.sort(Comparator.comparingInt(Team::getChampionSeed));
 
         List<Team> activeTeams = seededTeams.stream()
                 .map(Team::clone) // Clone or copy each team
