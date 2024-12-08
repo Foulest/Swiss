@@ -78,16 +78,16 @@ public class Match {
      * - 70% of the win probability is based on the team's average player rating.
      * <p>
      * If the match is the best of three:
-     * - 50% of the win probability is based on the team's world ranking.
-     * - 50% of the win probability is based on the team's average player rating.
+     * - 70% of the win probability is based on the team's world ranking.
+     * - 30% of the win probability is based on the team's average player rating.
      *
      * @param t1 The first team.
      * @param t2 The second team.
      * @return The win probability of the first team.
      */
     public static double calculateWinProbability(@NotNull Team t1, @NotNull Team t2, boolean bestOfThree) {
-        double worldRankingWeight = bestOfThree ? 0.50 / 100.0 : 0.30 / 100.0;
-        double playerRatingWeight = bestOfThree ? 0.50 : 0.70;
+        double worldRankingWeight = bestOfThree ? 0.70 / 100.0 : 0.30 / 100.0;
+        double playerRatingWeight = bestOfThree ? 0.30 : 0.70;
         double scale = 5.0;
 
         // Compute scores
