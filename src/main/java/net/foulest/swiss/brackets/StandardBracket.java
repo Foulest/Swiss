@@ -125,6 +125,7 @@ public class StandardBracket implements Bracket {
 
             // Create a match between the two teams
             Match match = new Match(team1, team2, 1);
+//            double winProbability = Match.calculateWinProbability(team1, team2, false);
 
             // Simulate the match
             Team winner = match.simulate(false);
@@ -140,7 +141,7 @@ public class StandardBracket implements Bracket {
             updatePastOpponents(pastOpponents, winner, loser);
 
 //            // Print the match result
-//            printMatchResult(winner, records, loser);
+//            printMatchResult(winner, records, loser, winProbability, team1);
         }
 
         // Calculate Buchholz scores at the end of the group stage
@@ -283,6 +284,7 @@ public class StandardBracket implements Bracket {
                 for (Match match : matches) {
                     Team team1 = match.getTeam1();
                     Team team2 = match.getTeam2();
+//                    double winProbability = Match.calculateWinProbability(team1, team2, false);
 
                     // Simulate the match
                     Team winner = match.simulate(false);
@@ -298,7 +300,7 @@ public class StandardBracket implements Bracket {
                     updatePastOpponents(pastOpponents, winner, loser);
 
 //                    // Print the match result
-//                    printMatchResult(winner, records, loser);
+//                    printMatchResult(winner, records, loser, winProbability, team1);
 
                     // Add only teams that haven't been eliminated
                     if (records.get(winner)[1] < 3) {

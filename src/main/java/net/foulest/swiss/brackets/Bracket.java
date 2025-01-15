@@ -58,6 +58,37 @@ public interface Bracket {
     }
 
     /**
+     * Print the match result with a win probability.
+     *
+     * @param winner  The winning team.
+     * @param records The records of each team.
+     * @param loser   The losing team.
+     * @param winProbability The win probability of the match for Team 1.
+     * @param team1 The first team.
+     */
+    default void printMatchResult(@NotNull Team winner,
+                                  @NotNull Map<Team, int[]> records,
+                                  @NotNull Team loser,
+                                  double winProbability,
+                                  @NotNull Team team1) {
+        String winnerName = winner.getName();
+        String loserName = loser.getName();
+
+        int[] winnerRecords = records.get(winner);
+        int[] loserRecords = records.get(loser);
+
+        // Flip the win probability if team 1 isn't the winner
+        // This is needed because the win probability is always calculated for team 1
+        if (!winner.equals(team1)) {
+            winProbability = Math.abs(1 - winProbability);
+        }
+
+        System.out.println(winnerName + " (" + winnerRecords[0] + "-" + winnerRecords[1] + ")"
+                + " beat " + loserName + " (" + loserRecords[0] + "-" + loserRecords[1] + ")"
+                + " with a " + winProbability + "% win probability");
+    }
+
+    /**
      * Append a probability to the result string if it exists.
      *
      * @param resultString The result string to append to.

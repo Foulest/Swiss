@@ -22,6 +22,7 @@ import lombok.Data;
 import net.foulest.swiss.team.Team;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.SQLOutput;
 import java.util.Random;
 
 /**
@@ -86,16 +87,16 @@ public class Match {
      * @return The win probability of the first team.
      */
     public static double calculateWinProbability(@NotNull Team t1, @NotNull Team t2, boolean bestOfThree) {
-        double worldRankingWeight = bestOfThree ? 0.60 / 100.0 : 0.40 / 100.0;
+        double worldRankingWeight = bestOfThree ? 0.60 : 0.40;
         double playerRatingWeight = bestOfThree ? 0.40 : 0.60;
         double scale = 5.0;
 
         // Compute scores
-        double t1Score = worldRankingWeight * (100.0 - t1.getWorldRanking()) + playerRatingWeight * t1.getAvgPlayerRating();
-        double t2Score = worldRankingWeight * (100.0 - t2.getWorldRanking()) + playerRatingWeight * t2.getAvgPlayerRating();
+        double t1Score = (worldRankingWeight / 100.0) * (100.0 - t1.getWorldRanking()) + playerRatingWeight * t1.getAvgPlayerRating();
+        double t2Score = (worldRankingWeight / 100.0) * (100.0 - t2.getWorldRanking()) + playerRatingWeight * t2.getAvgPlayerRating();
 
         // Calculate win probability
-        return 1.0 / (1.0 + Math.exp(-scale * (t1Score - t2Score)));
+        return (1.0 / (1.0 + Math.exp(-scale * (t1Score - t2Score))));
     }
 
     /**
@@ -105,14 +106,32 @@ public class Match {
      * @param t2 The second team.
      */
     public static void displayWinnerFromProbability(@NotNull Team t1, @NotNull Team t2, boolean bestOfThree) {
-        double winProbability = calculateWinProbability(t1, t2, bestOfThree);
+        double t1WinProbability = calculateWinProbability(t1, t2, bestOfThree);
+        double t2WinProbability = 1 - t1WinProbability;
+
         String t1Name = t1.getName();
         String t2Name = t2.getName();
 
-        if (winProbability >= 0.5) {
-            System.out.println(t1Name + " has a " + (winProbability * 100) + "% chance of winning against " + t2Name);
+        if (t1WinProbability >= 0.5) {
+            System.out.println(t1Name + " has a " + (t1WinProbability * 100) + "% chance of winning against " + t2Name);
         } else {
-            System.out.println(t2Name + " has a " + ((1 - winProbability) * 100) + "% chance of winning against " + t1Name);
+            System.out.println(t2Name + " has a " + ((1 - t1WinProbability) * 100) + "% chance of winning against " + t1Name);
         }
+
+        // Calculate win probability for dynamic rating adjustment
+        double actualOutcome = (t1WinProbability >= 0.5) ? 1 : 0; // 1 if team1 wins, 0 if team2 wins
+
+        // Randomly generate the K-factor between 0.003 and 0.007
+        double K = 0.003 + Math.random() * 0.004;
+
+        // Get average player ratings
+        double t1AvgPlayerRating = t1.getAvgPlayerRating();
+        double t2AvgPlayerRating = t2.getAvgPlayerRating();
+
+        // Print ratings using Elo-like formula
+        System.out.println(t1Name + "'s rating would change from " + t1AvgPlayerRating + " to "
+                + (t1AvgPlayerRating + K * (actualOutcome - t1WinProbability)));
+        System.out.println(t2Name + "'s rating would change from " + t2AvgPlayerRating + " to "
+                + (t2AvgPlayerRating + K * ((1 - actualOutcome) - t2WinProbability)));
     }
 }

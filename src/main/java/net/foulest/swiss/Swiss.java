@@ -20,6 +20,7 @@ package net.foulest.swiss;
 import lombok.Data;
 import net.foulest.swiss.brackets.ChampionsBracket;
 import net.foulest.swiss.brackets.StandardBracket;
+import net.foulest.swiss.match.Match;
 import net.foulest.swiss.team.Team;
 
 import java.util.ArrayList;
@@ -46,40 +47,39 @@ public final class Swiss {
         Scanner scanner = new Scanner(System.in, "UTF-8").useLocale(Locale.ROOT);
 
         // Create teams with data from HLTV
-        Team g2 = new Team("G2", 1, 2, 3, 1.056);
-//        Team natusVincere = new Team("Natus Vincere", 2, 1, 1.098); // Eliminated
-        Team vitality = new Team("Vitality", 3, 3, 2, 1.122);
-        Team spirit = new Team("Spirit", 4, 4, 4, 1.076);
-        Team mouz = new Team("MOUZ", 5, 5, 8, 1.042);
-        Team faze = new Team("FaZe", 6, 6, 7, 1.030);
-        Team heroic = new Team("Heroic", 7, 7, 6, 1.094);
-//        Team _3DMAX = new Team("3DMAX", 8, 16, 1.056); // Eliminated
-        Team theMongolZ = new Team("The MongolZ", 9, 9, 1, 1.120);
-        Team liquid = new Team("Liquid", 10, 13, 5, 1.036);
-//        Team gamerLegion = new Team("GamerLegion", 11, 20, 1.032); // Eliminated
-//        Team furia = new Team("FURIA", 12, 8, 1.044); // Eliminated
-//        Team paiN = new Team("paiN", 13, 15, 1.108); // Eliminated
-//        Team wildcard = new Team("Wildcard", 14, 22, 1.056); // Eliminated
-//        Team big = new Team("BIG", 15, 19, 1.060); // Eliminated
-//        Team mibr = new Team("MIBR", 16, 17, 1.064); // Eliminated
+        Team furia = new Team("FURIA", 8, 1, 1, 1.038);
+        Team mongolz = new Team("The MongolZ", 11, 7, 7, 1.112);
+        Team virtusPro = new Team("Virtus.Pro", 12, 2, 2, 1.060);
+        Team liquid = new Team("Liquid", 13, 3, 3, 1.044);
+        Team complexity = new Team("Complexity", 14, 4, 4, 1.030);
+        Team pain = new Team("PaiN", 17, 8, 8,1.094);
+        Team big = new Team("BIG", 18, 5, 5, 1.070);
+        Team mibr = new Team("MIBR", 19, 10, 10, 1.054);
+        Team flyQuest = new Team("FlyQuest", 20, 12, 12, 1.102);
+        Team gamerLegion = new Team("GamerLegion", 22, 9, 9,1.026);
+        Team wildcard = new Team("Wildcard", 24, 14, 14, 1.070);
+        Team imperial = new Team("Imperial", 26, 16, 16, 1.032);
+        Team passionUa = new Team("Passion UA", 28, 13, 13, 1.076);
+        Team fnatic = new Team("FNATIC", 29, 6, 6, 1.008);
+        Team cloud9 = new Team("Cloud9", 35, 11, 11, 1.098);
+        Team rareAtom = new Team("Rare Atom", 58, 15, 15, 0.950);
 
-        // Add teams to the list
-        teams.add(g2);
-//        teams.add(natusVincere);
-        teams.add(vitality);
-        teams.add(spirit);
-        teams.add(mouz);
-        teams.add(faze);
-        teams.add(heroic);
-//        teams.add(_3DMAX);
-        teams.add(theMongolZ);
+        teams.add(furia);
+        teams.add(mongolz);
+        teams.add(virtusPro);
         teams.add(liquid);
-//        teams.add(gamerLegion);
-//        teams.add(furia);
-//        teams.add(paiN);
-//        teams.add(wildcard);
-//        teams.add(big);
-//        teams.add(mibr);
+        teams.add(complexity);
+        teams.add(pain);
+        teams.add(big);
+        teams.add(mibr);
+        teams.add(flyQuest);
+        teams.add(gamerLegion);
+        teams.add(wildcard);
+        teams.add(imperial);
+        teams.add(passionUa);
+        teams.add(fnatic);
+        teams.add(cloud9);
+        teams.add(rareAtom);
 
         System.out.println("Swiss - CS2 Major Monte Carlo Simulation");
         System.out.println("by Foulest | github.com/Foulest");
@@ -100,12 +100,19 @@ public final class Swiss {
             return;
         }
 
-//        // You can also display the winner of a match based on win probability
-//        // instead of simulating the entire bracket (these are just examples).
-//        if (bracketNumber == 0) {
-//            Match.displayWinnerFromProbability(wildcard, gamerLegion, true);
-//            return;
-//        }
+        // You can also display the winner of a match based on win probability
+        // instead of simulating the entire bracket (these are just examples).
+        if (bracketNumber == 0) {
+            Match.displayWinnerFromProbability(furia, gamerLegion, false);
+            Match.displayWinnerFromProbability(virtusPro, mibr, false);
+            Match.displayWinnerFromProbability(liquid, cloud9, false);
+            Match.displayWinnerFromProbability(complexity, flyQuest, false);
+            Match.displayWinnerFromProbability(big, passionUa, false);
+            Match.displayWinnerFromProbability(fnatic, wildcard, false);
+            Match.displayWinnerFromProbability(mongolz, rareAtom, false);
+            Match.displayWinnerFromProbability(pain, imperial, false);
+            return;
+        }
 
         boolean standardBracket = bracketNumber == 1;
 
