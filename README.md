@@ -12,7 +12,7 @@
 - **100%** accurate seedings based
   on [Buchholz](https://liquipedia.net/counterstrike/PGL/2024/Copenhagen/Europe_A#:~:text=The-,Buchholz%20system,-is%20used%20to)
   and current standings
-- Odds calculated using world rankings and average player ratings
+- Odds calculated using world rankings and team KDR data
 - Customizable settings and detailed results for each bracket
 - Easy-to-use console interface for quick bracket simulations
 - Option to display odds for any manually given match
