@@ -14,27 +14,27 @@ public interface Bracket {
     long getStartingTime();
 
     /**
-     * Update the ratings for both teams based on the match outcome.
+     * Update the KDRs for both teams based on the match outcome.
      *
      * @param team1 The first team.
      * @param team2 The second team.
      * @param winner The winning team.
      */
-    default void updateTeamRatings(Team team1, Team team2, Team winner, boolean bestOfThree) {
-        // Calculate win probability for dynamic rating adjustment
+    default void updateTeamKDR(Team team1, Team team2, Team winner, boolean bestOfThree) {
+        // Calculate win probability for dynamic KDR adjustment
         double winProbability = Match.calculateWinProbability(team1, team2, bestOfThree);
         double actualOutcome = (winner == team1) ? 1 : 0; // 1 if team1 wins, 0 if team2 wins
 
         // Randomly generate the K-factor between 0.003 and 0.007
         double K = 0.003 + Math.random() * 0.004;
 
-        // Adjust ratings for both teams
+        // Adjust KDRs for both teams
         double team1Expected = winProbability;  // Expected score for team1
         double team2Expected = 1 - winProbability; // Expected score for team2
 
-        // Update ratings using Elo-like formula
-        team1.setAvgPlayerRating(team1.getAvgPlayerRating() + K * (actualOutcome - team1Expected));
-        team2.setAvgPlayerRating(team2.getAvgPlayerRating() + K * ((1 - actualOutcome) - team2Expected));
+        // Update KDR using Elo-like formula
+        team1.setKdr(team1.getKdr() + K * (actualOutcome - team1Expected));
+        team2.setKdr(team2.getKdr() + K * ((1 - actualOutcome) - team2Expected));
     }
 
     /**

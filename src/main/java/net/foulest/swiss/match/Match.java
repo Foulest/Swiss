@@ -22,7 +22,6 @@ import lombok.Data;
 import net.foulest.swiss.team.Team;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.SQLOutput;
 import java.util.Random;
 
 /**
@@ -75,25 +74,25 @@ public class Match {
      * Calculates the win probability of a team against another team.
      * <p>
      * If the match is the best of one:
-     * - 40% of the win probability is based on the team's world ranking.
-     * - 60% of the win probability is based on the team's average player rating.
+     * - 30% of the win probability is based on the team's world ranking.
+     * - 70% of the win probability is based on the team's KDR.
      * <p>
      * If the match is the best of three:
-     * - 60% of the win probability is based on the team's world ranking.
-     * - 40% of the win probability is based on the team's average player rating.
+     * - 40% of the win probability is based on the team's world ranking.
+     * - 60% of the win probability is based on the team's KDR.
      *
      * @param t1 The first team.
      * @param t2 The second team.
      * @return The win probability of the first team.
      */
     public static double calculateWinProbability(@NotNull Team t1, @NotNull Team t2, boolean bestOfThree) {
-        double worldRankingWeight = bestOfThree ? 0.60 : 0.40;
-        double playerRatingWeight = bestOfThree ? 0.40 : 0.60;
+        double worldRankingWeight = bestOfThree ? 0.70 : 0.60;
+        double kdrWeight = bestOfThree ? 0.30 : 0.40;
         double scale = 5.0;
 
         // Compute scores
-        double t1Score = (worldRankingWeight / 100.0) * (100.0 - t1.getWorldRanking()) + playerRatingWeight * t1.getAvgPlayerRating();
-        double t2Score = (worldRankingWeight / 100.0) * (100.0 - t2.getWorldRanking()) + playerRatingWeight * t2.getAvgPlayerRating();
+        double t1Score = (worldRankingWeight / 100.0) * (100.0 - t1.getWorldRanking()) + kdrWeight * t1.getKdr();
+        double t2Score = (worldRankingWeight / 100.0) * (100.0 - t2.getWorldRanking()) + kdrWeight * t2.getKdr();
 
         // Calculate win probability
         return (1.0 / (1.0 + Math.exp(-scale * (t1Score - t2Score))));
@@ -124,14 +123,14 @@ public class Match {
         // Randomly generate the K-factor between 0.003 and 0.007
         double K = 0.003 + Math.random() * 0.004;
 
-        // Get average player ratings
-        double t1AvgPlayerRating = t1.getAvgPlayerRating();
-        double t2AvgPlayerRating = t2.getAvgPlayerRating();
+        // Get KDRs
+        double t1KDR = t1.getKdr();
+        double t2KDR = t2.getKdr();
 
         // Print ratings using Elo-like formula
-        System.out.println(t1Name + "'s rating would change from " + t1AvgPlayerRating + " to "
-                + (t1AvgPlayerRating + K * (actualOutcome - t1WinProbability)));
-        System.out.println(t2Name + "'s rating would change from " + t2AvgPlayerRating + " to "
-                + (t2AvgPlayerRating + K * ((1 - actualOutcome) - t2WinProbability)));
+        System.out.println(t1Name + "'s rating would change from " + t1KDR + " to "
+                + (t1KDR + K * (actualOutcome - t1WinProbability)));
+        System.out.println(t2Name + "'s rating would change from " + t2KDR + " to "
+                + (t2KDR + K * ((1 - actualOutcome) - t2WinProbability)));
     }
 }

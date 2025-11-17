@@ -47,39 +47,39 @@ public final class Swiss {
         Scanner scanner = new Scanner(System.in, "UTF-8").useLocale(Locale.ROOT);
 
         // Create teams with data from HLTV
-        Team furia = new Team("FURIA", 8, 1, 1, 1.038);
-        Team mongolz = new Team("The MongolZ", 11, 7, 7, 1.112);
-        Team virtusPro = new Team("Virtus.Pro", 12, 2, 2, 1.060);
-        Team liquid = new Team("Liquid", 13, 3, 3, 1.044);
-        Team complexity = new Team("Complexity", 14, 4, 4, 1.030);
-        Team pain = new Team("PaiN", 17, 8, 8,1.094);
-        Team big = new Team("BIG", 18, 5, 5, 1.070);
-        Team mibr = new Team("MIBR", 19, 10, 10, 1.054);
-        Team flyQuest = new Team("FlyQuest", 20, 12, 12, 1.102);
-        Team gamerLegion = new Team("GamerLegion", 22, 9, 9,1.026);
-        Team wildcard = new Team("Wildcard", 24, 14, 14, 1.070);
-        Team imperial = new Team("Imperial", 26, 16, 16, 1.032);
-        Team passionUa = new Team("Passion UA", 28, 13, 13, 1.076);
-        Team fnatic = new Team("FNATIC", 29, 6, 6, 1.008);
-        Team cloud9 = new Team("Cloud9", 35, 11, 11, 1.098);
-        Team rareAtom = new Team("Rare Atom", 58, 15, 15, 0.950);
+        Team team1 = new Team("Legacy", 8, 1, 1, 1.01);
+        Team team2 = new Team("FaZe", 15, 2, 2, 0.99);
+        Team team3 = new Team("B8", 18, 3, 3, 0.98);
+        Team team4 = new Team("GamerLegion", 19, 4, 4, 0.96);
+        Team team5 = new Team("fnatic", 21, 5, 5, 1.01);
+        Team team6 = new Team("PARIVISION", 22, 6, 6, 1.08);
+        Team team7 = new Team("NIP", 34, 7, 7, 0.96);
+        Team team8 = new Team("Imperial", 31, 8, 8, 0.99);
+        Team team9 = new Team("FlyQuest", 37, 9, 9, 0.90);
+        Team team10 = new Team("Lynn Vision", 33, 10, 10, 0.97);
+        Team team11 = new Team("M80", 30, 11, 11, 0.97);
+        Team team12 = new Team("Fluxo", 39, 12, 12, 0.96);
+        Team team13 = new Team("Red Canids", 61, 13, 13, 0.90);
+        Team team14 = new Team("The Huns", 55, 14, 14, 0.90);
+        Team team15 = new Team("NRG", 32, 15, 15, 0.99);
+        Team team16 = new Team("Rare Atom", 63, 16, 16, 0.92);
 
-        teams.add(furia);
-        teams.add(mongolz);
-        teams.add(virtusPro);
-        teams.add(liquid);
-        teams.add(complexity);
-        teams.add(pain);
-        teams.add(big);
-        teams.add(mibr);
-        teams.add(flyQuest);
-        teams.add(gamerLegion);
-        teams.add(wildcard);
-        teams.add(imperial);
-        teams.add(passionUa);
-        teams.add(fnatic);
-        teams.add(cloud9);
-        teams.add(rareAtom);
+        teams.add(team1);
+        teams.add(team2);
+        teams.add(team3);
+        teams.add(team4);
+        teams.add(team5);
+        teams.add(team6);
+        teams.add(team7);
+        teams.add(team8);
+        teams.add(team9);
+        teams.add(team10);
+        teams.add(team11);
+        teams.add(team12);
+        teams.add(team13);
+        teams.add(team14);
+        teams.add(team15);
+        teams.add(team16);
 
         System.out.println("Swiss - CS2 Major Monte Carlo Simulation");
         System.out.println("by Foulest | github.com/Foulest");
@@ -103,14 +103,7 @@ public final class Swiss {
         // You can also display the winner of a match based on win probability
         // instead of simulating the entire bracket (these are just examples).
         if (bracketNumber == 0) {
-            Match.displayWinnerFromProbability(furia, gamerLegion, false);
-            Match.displayWinnerFromProbability(virtusPro, mibr, false);
-            Match.displayWinnerFromProbability(liquid, cloud9, false);
-            Match.displayWinnerFromProbability(complexity, flyQuest, false);
-            Match.displayWinnerFromProbability(big, passionUa, false);
-            Match.displayWinnerFromProbability(fnatic, wildcard, false);
-            Match.displayWinnerFromProbability(mongolz, rareAtom, false);
-            Match.displayWinnerFromProbability(pain, imperial, false);
+            Match.displayWinnerFromProbability(team1, team2, false);
             return;
         }
 

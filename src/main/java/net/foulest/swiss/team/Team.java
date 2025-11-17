@@ -38,9 +38,8 @@ public class Team implements Cloneable {
     private int seeding; // Higher number = better seed
     private int championSeed; // Where the team is seeded in the championship bracket
 
-    // The average player rating is calculated by adding each player's
-    // HLTV 2.1 rating from the past 3 months together and dividing by five
-    private double avgPlayerRating;
+    // The KDR from the past three months vs Top 50 teams; 0.95 if no data available
+    private double kdr;
 
     // Method to get the Team object based on the team name
     public static @Nullable Team getTeamByName(String name) {
@@ -69,6 +68,6 @@ public class Team implements Cloneable {
 
     @Override
     public Team clone() {
-        return new Team(name, worldRanking, seeding, championSeed, avgPlayerRating);
+        return new Team(name, worldRanking, seeding, championSeed, kdr);
     }
 }

@@ -66,6 +66,18 @@ public class StandardBracket implements Bracket {
         // Initialize results map for each team
         teams.forEach(team -> results.put(team, new ConcurrentHashMap<>()));
 
+        // Map to track head-to-head counts
+        Map<Team, Map<Team, Integer>> headToHead = new ConcurrentHashMap<>();
+        teams.forEach(team -> {
+            Map<Team, Integer> counts = new ConcurrentHashMap<>();
+            for (Team opp : teams) {
+                if (!team.equals(opp)) {
+                    counts.put(opp, 0);
+                }
+            }
+            headToHead.put(team, counts);
+        });
+
         // ExecutorService to manage threads
         ExecutorService executor = Executors.newWorkStealingPool();
 
@@ -73,7 +85,7 @@ public class StandardBracket implements Bracket {
         List<Callable<Void>> tasks = new ArrayList<>();
         for (int i = 0; i < numSimulations; i++) {
             tasks.add(() -> {
-                simulateBracket(results); // Simulate one bracket
+                simulateBracket(results, headToHead); // Simulate one bracket
                 return null;
             });
         }
@@ -90,6 +102,9 @@ public class StandardBracket implements Bracket {
 
         // Analyze and print the results after all simulations are complete
         printResults(results, numSimulations, startingTime, specialReached, specialSuccess);
+
+        // Print head-to-head summaries
+        printHeadToHead(headToHead);
     }
 
     /**
@@ -98,7 +113,7 @@ public class StandardBracket implements Bracket {
      * @param results The results of the simulations.
      */
     @SuppressWarnings("NestedMethodCall")
-    private void simulateBracket(Map<Team, Map<String, Integer>> results) {
+    private void simulateBracket(Map<Team, Map<String, Integer>> results, Map<Team, Map<Team, Integer>> headToHead) {
         Map<Team, int[]> records = new HashMap<>();
         Map<Team, Integer> buchholzScores = new HashMap<>();
         Map<Team, List<Team>> pastOpponents = new HashMap<>();
@@ -131,8 +146,8 @@ public class StandardBracket implements Bracket {
             Team winner = match.simulate(false);
             Team loser = (winner == team1) ? team2 : team1;
 
-            // Update team ratings
-            updateTeamRatings(team1, team2, winner, match.getMaxRounds() == 3);
+//            // Update team ratings
+//            updateTeamKDR(team1, team2, winner, match.getMaxRounds() == 3);
 
             // Update records
             Bracket.updateRecords(records, winner, loser);
@@ -290,8 +305,8 @@ public class StandardBracket implements Bracket {
                     Team winner = match.simulate(false);
                     Team loser = (winner == team1) ? team2 : team1;
 
-                    // Update team ratings
-                    updateTeamRatings(team1, team2, winner, match.getMaxRounds() == 3);
+//                    // Update team ratings
+//                    updateTeamKDR(team1, team2, winner, match.getMaxRounds() == 3);
 
                     // Update records
                     Bracket.updateRecords(records, winner, loser);
@@ -301,6 +316,10 @@ public class StandardBracket implements Bracket {
 
 //                    // Print the match result
 //                    printMatchResult(winner, records, loser, winProbability, team1);
+
+                    // Update head-to-head counts
+                    headToHead.get(team1).computeIfPresent(team2, (k, v) -> v + 1);
+                    headToHead.get(team2).computeIfPresent(team1, (k, v) -> v + 1);
 
                     // Add only teams that haven't been eliminated
                     if (records.get(winner)[1] < 3) {
@@ -460,6 +479,25 @@ public class StandardBracket implements Bracket {
             }
         });
         return group;
+    }
+
+    /**
+     * Print head-to-head encounter percentages for each team.
+     */
+    private static void printHeadToHead(@NotNull Map<Team, Map<Team, Integer>> headToHead) {
+        System.out.println();
+        headToHead.forEach((team, opponents) -> {
+            int totalMatches = opponents.values().stream().mapToInt(Integer::intValue).sum();
+            System.out.println(team.getName() + "'s most faced opponents:");
+            opponents.entrySet().stream()
+                    .sorted(Map.Entry.<Team, Integer>comparingByValue().reversed())
+                    .limit(3)
+                    .forEach(entry -> {
+                        double pct = entry.getValue() * 100.0 / totalMatches;
+                        System.out.printf("- %s (%.2f%%)%n", entry.getKey().getName(), pct);
+                    });
+            System.out.println();
+        });
     }
 
     /**

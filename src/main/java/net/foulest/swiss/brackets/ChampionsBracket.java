@@ -126,8 +126,8 @@ public class ChampionsBracket implements Bracket {
                 Team winner = match.simulate(false);
                 Team loser = (winner == team1) ? team2 : team1;
 
-                // Update team ratings
-                updateTeamRatings(team1, team2, winner, false);
+//                // Update team ratings
+//                updateTeamKDR(team1, team2, winner, false);
 
                 // Update records
                 Bracket.updateRecords(records, winner, loser);
@@ -157,32 +157,6 @@ public class ChampionsBracket implements Bracket {
 
             // Record every team's final record
             results.get(team).merge(result, 1, Integer::sum);
-        }
-
-//        // Print the rating change for each team
-//        printRatingChange(initialRatings, records);
-    }
-
-    /**
-     * Print the rating change for each team.
-     *
-     * @param initialRatings The initial ratings of each team.
-     * @param records       The records of each team.
-     */
-    private static void printRatingChange(@NotNull Map<Team, Double> initialRatings, Map<Team, int[]> records) {
-        System.out.println();
-
-        for (Map.Entry<Team, Double> entry : initialRatings.entrySet()) {
-            Team team = entry.getKey();
-            double initialRating = initialRatings.get(team);
-            double finalRating = team.getAvgPlayerRating();
-            double ratingChange = finalRating - initialRating;
-            String teamName = team.getName();
-            int[] teamRecords = records.get(team);
-
-            System.out.println(teamName + " (" + teamRecords[0] + "-" + teamRecords[1] + ")"
-                    + " started with a rating of " + initialRating
-                    + " and ended with a rating of " + finalRating + " (" + ratingChange + ")");
         }
     }
 
