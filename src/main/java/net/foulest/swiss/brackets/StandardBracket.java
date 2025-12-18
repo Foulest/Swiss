@@ -17,6 +17,7 @@
  */
 package net.foulest.swiss.brackets;
 
+import lombok.Cleanup;
 import lombok.Data;
 import net.foulest.swiss.match.Match;
 import net.foulest.swiss.team.Team;
@@ -79,7 +80,7 @@ public class StandardBracket implements Bracket {
         });
 
         // ExecutorService to manage threads
-        ExecutorService executor = Executors.newWorkStealingPool();
+        @Cleanup ExecutorService executor = Executors.newWorkStealingPool();
 
         // Create tasks for simulations
         List<Callable<Void>> tasks = new ArrayList<>();
@@ -102,9 +103,6 @@ public class StandardBracket implements Bracket {
 
         // Analyze and print the results after all simulations are complete
         printResults(results, numSimulations, startingTime, specialReached, specialSuccess);
-
-        // Print head-to-head summaries
-        printHeadToHead(headToHead);
     }
 
     /**
@@ -127,7 +125,7 @@ public class StandardBracket implements Bracket {
 
         // Sort teams by their seeding in ascending order
         List<Team> seededTeams = new ArrayList<>(teams);
-        seededTeams.sort(Comparator.comparingInt(Team::getSeeding));
+        seededTeams.sort(Comparator.comparingInt(Team::getSeed));
 
         List<Team> activeTeams = seededTeams.stream()
                 .map(Team::clone) // Clone or copy each team
@@ -140,23 +138,16 @@ public class StandardBracket implements Bracket {
 
             // Create a match between the two teams
             Match match = new Match(team1, team2, 1);
-//            double winProbability = Match.calculateWinProbability(team1, team2, false);
 
             // Simulate the match
             Team winner = match.simulate(false);
             Team loser = (winner == team1) ? team2 : team1;
-
-//            // Update team ratings
-//            updateTeamKDR(team1, team2, winner, match.getMaxRounds() == 3);
 
             // Update records
             Bracket.updateRecords(records, winner, loser);
 
             // Update past opponents
             updatePastOpponents(pastOpponents, winner, loser);
-
-//            // Print the match result
-//            printMatchResult(winner, records, loser, winProbability, team1);
         }
 
         // Calculate Buchholz scores at the end of the group stage
@@ -178,7 +169,7 @@ public class StandardBracket implements Bracket {
             Map<Team, Integer> currentStandings = new HashMap<>();
 
             // Find the current round by taking the first team in the activeTeams and adding its record
-            int currentRound = records.get(activeTeams.get(0))[0] + records.get(activeTeams.get(0))[1] + 1;
+            int currentRound = records.get(activeTeams.getFirst())[0] + records.get(activeTeams.getFirst())[1] + 1;
 
             // Calculate the current standings for the current round
             calculateCurrentStandings(currentRound, records, currentStandings, buchholzScores);
@@ -299,23 +290,16 @@ public class StandardBracket implements Bracket {
                 for (Match match : matches) {
                     Team team1 = match.getTeam1();
                     Team team2 = match.getTeam2();
-//                    double winProbability = Match.calculateWinProbability(team1, team2, false);
 
                     // Simulate the match
                     Team winner = match.simulate(false);
                     Team loser = (winner == team1) ? team2 : team1;
-
-//                    // Update team ratings
-//                    updateTeamKDR(team1, team2, winner, match.getMaxRounds() == 3);
 
                     // Update records
                     Bracket.updateRecords(records, winner, loser);
 
                     // Update past opponents
                     updatePastOpponents(pastOpponents, winner, loser);
-
-//                    // Print the match result
-//                    printMatchResult(winner, records, loser, winProbability, team1);
 
                     // Update head-to-head counts
                     headToHead.get(team1).computeIfPresent(team2, (k, v) -> v + 1);
@@ -394,8 +378,8 @@ public class StandardBracket implements Bracket {
      * - 1-3
      * - 0-3
      *
-     * @param currentRound The current round of the group stage
-     * @param records The records of each team
+     * @param currentRound     The current round of the group stage
+     * @param records          The records of each team
      * @param currentStandings The current standings of each team
      */
     private static void calculateCurrentStandings(int currentRound, Map<Team, int[]> records,
@@ -465,8 +449,8 @@ public class StandardBracket implements Bracket {
      * Get the teams with a specific record.
      *
      * @param records The records of each team.
-     * @param wins The number of wins.
-     * @param losses The number of losses.
+     * @param wins    The number of wins.
+     * @param losses  The number of losses.
      * @return The list of teams with the specified record.
      */
     private static @NotNull List<Team> getTeamsByRecord(@NotNull Map<Team, int[]> records,
@@ -503,12 +487,12 @@ public class StandardBracket implements Bracket {
     /**
      * Sort the teams in the group by seeding first, then by Buchholz score, then by seeding.
      *
-     * @param group The group of teams.
+     * @param group          The group of teams.
      * @param buchholzScores The Buchholz score for each team.
      */
     private static void sortTeams(@NotNull List<Team> group, Map<Team, Integer> buchholzScores) {
         // Sort the teams by seeding first
-        group.sort(Comparator.comparingInt(Team::getSeeding));
+        group.sort(Comparator.comparingInt(Team::getSeed));
 
         // Sort the teams by Buchholz score, then by seeding
         group.sort((team1, team2) -> {
@@ -520,8 +504,8 @@ public class StandardBracket implements Bracket {
                 return buchholzComparison;
             }
 
-            int t1Seeding = team1.getSeeding();
-            int t2Seeding = team2.getSeeding();
+            int t1Seeding = team1.getSeed();
+            int t2Seeding = team2.getSeed();
             return Integer.compare(t1Seeding, t2Seeding);
         });
     }
@@ -530,8 +514,8 @@ public class StandardBracket implements Bracket {
      * Update the past opponents for each team.
      *
      * @param pastOpponents The past opponents for each team.
-     * @param winner The winning team.
-     * @param loser The losing team.
+     * @param winner        The winning team.
+     * @param loser         The losing team.
      */
     private static void updatePastOpponents(@NotNull Map<Team, List<Team>> pastOpponents, Team winner, Team loser) {
         pastOpponents.get(winner).add(loser);
@@ -541,9 +525,9 @@ public class StandardBracket implements Bracket {
     /**
      * Calculate the Buchholz score for each team.
      *
-     * @param activeTeams The list of active teams.
-     * @param pastOpponents The past opponents for each team.
-     * @param records The records of each team.
+     * @param activeTeams    The list of active teams.
+     * @param pastOpponents  The past opponents for each team.
+     * @param records        The records of each team.
      * @param buchholzScores The Buchholz score for each team.
      */
     private static void calculateBuchholz(@NotNull List<Team> activeTeams,
@@ -568,7 +552,7 @@ public class StandardBracket implements Bracket {
      * Check if all teams have been decided.
      *
      * @param activeTeams The list of active teams.
-     * @param records The records of each team.
+     * @param records     The records of each team.
      * @return True if all teams have either 3 wins or 3 losses, false otherwise.
      */
     private static boolean allTeamsDecided(@NotNull List<Team> activeTeams, Map<Team, int[]> records) {
@@ -591,35 +575,57 @@ public class StandardBracket implements Bracket {
     private static void printResults(@NotNull Map<Team, Map<String, Integer>> results,
                                      int numSimulations, long startingTime,
                                      int specialReached, int specialSuccess) {
+        System.out.println();
+        System.out.println("Note: These predictions are not guaranteed to be accurate.");
+        System.out.println("Use these simulations as a guideline, alongside form, betting odds, and results.");
+
         // Print the header
         Bracket.printHeader(numSimulations, startingTime);
 
-        for (Map.Entry<Team, Map<String, Integer>> entry : results.entrySet()) {
+        // Sort results entryset by team seeding
+        List<Map.Entry<Team, Map<String, Integer>>> sortedEntries = new ArrayList<>(results.entrySet());
+        sortedEntries.sort(Comparator.comparingInt(e -> e.getKey().getSeed()));
+
+        // ---- Alignment prep: compute dynamic team-name column width ----
+        int maxNameLen = sortedEntries.stream()
+                .mapToInt(e -> e.getKey().getName().length())
+                .max().orElse(10);
+        int nameCol = Math.max(14, Math.min(28, maxNameLen + 2)); // clamp to a reasonable range
+
+        // Print a fixed header row (added Rank and 3-A)
+        System.out.printf(
+                "%-8s %-" + nameCol + "s  %6s  %6s  %10s  %10s  %10s  %10s  %10s  %10s  %10s  %10s  %10s%n",
+                "Seed", "Team", "Rank", "Swing", "[3-X]", "[X-3]", "[3-0]", "[3-1]", "[3-2]", "[2-3]", "[1-3]", "[0-3]", "[3-A]"
+        );
+
+        // ---- Rows ----
+        for (Map.Entry<Team, Map<String, Integer>> entry : sortedEntries) {
             Team team = entry.getKey();
             Map<String, Integer> recordCounts = entry.getValue();
 
-            // Calculate combined probabilities
-            double probability3X = (recordCounts.getOrDefault("3-1", 0)
-                    + recordCounts.getOrDefault("3-2", 0)) * 100.0 / numSimulations;
-            double probabilityX3 = (recordCounts.getOrDefault("1-3", 0)
-                    + recordCounts.getOrDefault("2-3", 0)) * 100.0 / numSimulations;
+            // Percentages for printing
+            double p3xPct = (recordCounts.getOrDefault("3-1", 0) + recordCounts.getOrDefault("3-2", 0)) * 100.0 / numSimulations;
+            double px3Pct = (recordCounts.getOrDefault("1-3", 0) + recordCounts.getOrDefault("2-3", 0)) * 100.0 / numSimulations;
+            double p30Pct = recordCounts.getOrDefault("3-0", 0) * 100.0 / numSimulations;
+            double p31Pct = recordCounts.getOrDefault("3-1", 0) * 100.0 / numSimulations;
+            double p32Pct = recordCounts.getOrDefault("3-2", 0) * 100.0 / numSimulations;
+            double p23Pct = recordCounts.getOrDefault("2-3", 0) * 100.0 / numSimulations;
+            double p13Pct = recordCounts.getOrDefault("1-3", 0) * 100.0 / numSimulations;
+            double p03Pct = recordCounts.getOrDefault("0-3", 0) * 100.0 / numSimulations;
+            double p3APct = p3xPct + p30Pct;
 
-            // Build the result string
-            String teamName = team.getName();
-            StringBuilder resultString = new StringBuilder(String.format("Team: %s | 3-X (%.2f%%) X-3 (%.2f%%) ",
-                    teamName, probability3X, probabilityX3));
-
-            // Add individual probabilities
-            Bracket.appendProbability(resultString, "3-0", recordCounts, numSimulations);
-            Bracket.appendProbability(resultString, "0-3", recordCounts, numSimulations);
-
-            // Print the team's result
-            String result = resultString.toString();
-            String trimmed = result.trim();
-            System.out.println(trimmed);
+            // Fixed-width aligned line; always print all columns on one line
+            System.out.printf(
+                    "(#%-2d) %-" + nameCol + "s  %6.2f  %6.2f  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%%n",
+                    team.getSeed(),
+                    team.getName(),
+                    team.getRank(),
+                    team.getRoundSwing(),
+                    p3xPct, px3Pct, p30Pct, p31Pct, p32Pct, p23Pct, p13Pct, p03Pct, p3APct
+            );
         }
 
-        // Print special conditions
+        // Print special conditions (existing)
         if (specialReached > 0) {
             System.out.println();
             System.out.println("Special Reached: " + specialReached);

@@ -18,9 +18,8 @@
 package net.foulest.swiss.team;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import net.foulest.swiss.Swiss;
-import org.jetbrains.annotations.Nullable;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Objects;
 
@@ -29,27 +28,18 @@ import java.util.Objects;
  *
  * @author Foulest
  */
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 public class Team implements Cloneable {
 
     private String name;
-    private int worldRanking; // Lower number = better rank
-    private int seeding; // Higher number = better seed
-    private int championSeed; // Where the team is seeded in the championship bracket
+    private double rank; // Lower number = better rank (i.e., 1 is highest rank)
+    private int seed; // Lower number = better seed (i.e., 1 is highest seed)
+    private int cSeed; // Where the team is seeded in the championship bracket (if applicable)
 
-    // The KDR from the past three months vs Top 50 teams; 0.95 if no data available
-    private double kdr;
-
-    // Method to get the Team object based on the team name
-    public static @Nullable Team getTeamByName(String name) {
-        for (Team team : Swiss.teams) {
-            if (team.name.equalsIgnoreCase(name)) {
-                return team;
-            }
-        }
-        return null;
-    }
+    // The combined round swing percentage of the team
+    private double roundSwing;
 
     @Override
     public boolean equals(Object o) {
@@ -68,6 +58,6 @@ public class Team implements Cloneable {
 
     @Override
     public Team clone() {
-        return new Team(name, worldRanking, seeding, championSeed, kdr);
+        return new Team(name, rank, seed, cSeed, roundSwing);
     }
 }

@@ -104,7 +104,7 @@ public class ChampionsBracket implements Bracket {
 
         // Sort teams by their champion seeding in ascending order
         List<Team> seededTeams = new ArrayList<>(teams);
-        seededTeams.sort(Comparator.comparingInt(Team::getChampionSeed));
+        seededTeams.sort(Comparator.comparingInt(Team::getCSeed));
 
         List<Team> activeTeams = seededTeams.stream()
                 .map(Team::clone) // Clone or copy each team
@@ -126,14 +126,8 @@ public class ChampionsBracket implements Bracket {
                 Team winner = match.simulate(false);
                 Team loser = (winner == team1) ? team2 : team1;
 
-//                // Update team ratings
-//                updateTeamKDR(team1, team2, winner, false);
-
                 // Update records
                 Bracket.updateRecords(records, winner, loser);
-
-//                // Print the match result
-//                printMatchResult(winner, records, loser);
 
                 // Only add the winner to the next round
                 nextRoundTeams.add(winner);
@@ -163,8 +157,8 @@ public class ChampionsBracket implements Bracket {
     /**
      * Print the results of the simulations.
      *
-     * @param results         The results of the simulations.
-     * @param numSimulations  The number of simulations.
+     * @param results        The results of the simulations.
+     * @param numSimulations The number of simulations.
      */
     private static void printResults(@NotNull Map<Team, Map<String, Integer>> results,
                                      int numSimulations, long startingTime) {

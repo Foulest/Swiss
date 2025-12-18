@@ -12,7 +12,7 @@ description = 'Swiss'
 // Set the project's language level
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(8))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 

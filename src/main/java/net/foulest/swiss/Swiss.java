@@ -23,6 +23,7 @@ import net.foulest.swiss.brackets.StandardBracket;
 import net.foulest.swiss.match.Match;
 import net.foulest.swiss.team.Team;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -36,7 +37,7 @@ import java.util.Scanner;
 @Data
 public final class Swiss {
 
-    public static final List<Team> teams = new ArrayList<>();
+    private static final List<Team> teams = new ArrayList<>();
 
     /**
      * The main method of the program.
@@ -44,25 +45,26 @@ public final class Swiss {
      * @param args The program's arguments.
      */
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in, "UTF-8").useLocale(Locale.ROOT);
+        Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8).useLocale(Locale.ROOT);
 
         // Create teams with data from HLTV
-        Team team1 = new Team("Legacy", 8, 1, 1, 1.01);
-        Team team2 = new Team("FaZe", 15, 2, 2, 0.99);
-        Team team3 = new Team("B8", 18, 3, 3, 0.98);
-        Team team4 = new Team("GamerLegion", 19, 4, 4, 0.96);
-        Team team5 = new Team("fnatic", 21, 5, 5, 1.01);
-        Team team6 = new Team("PARIVISION", 22, 6, 6, 1.08);
-        Team team7 = new Team("NIP", 34, 7, 7, 0.96);
-        Team team8 = new Team("Imperial", 31, 8, 8, 0.99);
-        Team team9 = new Team("FlyQuest", 37, 9, 9, 0.90);
-        Team team10 = new Team("Lynn Vision", 33, 10, 10, 0.97);
-        Team team11 = new Team("M80", 30, 11, 11, 0.97);
-        Team team12 = new Team("Fluxo", 39, 12, 12, 0.96);
-        Team team13 = new Team("Red Canids", 61, 13, 13, 0.90);
-        Team team14 = new Team("The Huns", 55, 14, 14, 0.90);
-        Team team15 = new Team("NRG", 32, 15, 15, 0.99);
-        Team team16 = new Team("Rare Atom", 63, 16, 16, 0.92);
+        Team team1 = new Team("FURIA", 1.5, 1, 1, 3.26);
+        Team team2 = new Team("Vitality", 2.5, 2, 2, 2.68);
+        Team team3 = new Team("Falcons", 2.5, 3, 3, 5.64);
+        Team team4 = new Team("MongolZ", 5.0, 4, 4, -0.88);
+        Team team5 = new Team("MOUZ", 4.0, 5, 5, 1.93);
+        Team team6 = new Team("Spirit", 7.0, 6, 6, 0.74);
+        Team team7 = new Team("G2", 9.0, 7, 7, 0.86);
+        Team team8 = new Team("paiN", 14.0, 8, 8, 0.32);
+
+        Team team9 = new Team("NAVI", 7.0, 9, 9, 0.11);
+        Team team10 = new Team("FaZe", 13.0, 10, 10, 0.83);
+        Team team11 = new Team("B8", 14.0, 11, 11, 0.10);
+        Team team12 = new Team("Imperial", 31.5, 12, 12, -0.55);
+        Team team13 = new Team("PARIVISION", 21.0, 13, 13, 2.44);
+        Team team14 = new Team("Liquid", 13.0, 14, 14, -0.83);
+        Team team15 = new Team("Passion UA", 23.0, 15, 15, -5.61);
+        Team team16 = new Team("3DMAX", 14.5, 16, 16, -0.81);
 
         teams.add(team1);
         teams.add(team2);
@@ -103,7 +105,14 @@ public final class Swiss {
         // You can also display the winner of a match based on win probability
         // instead of simulating the entire bracket (these are just examples).
         if (bracketNumber == 0) {
-            Match.displayWinnerFromProbability(team1, team2, false);
+            Match.displayWinnerFromProbability(team1, team9, 1);
+            Match.displayWinnerFromProbability(team2, team10, 1);
+            Match.displayWinnerFromProbability(team3, team11, 1);
+            Match.displayWinnerFromProbability(team4, team12, 1);
+            Match.displayWinnerFromProbability(team5, team13, 1);
+            Match.displayWinnerFromProbability(team6, team14, 1);
+            Match.displayWinnerFromProbability(team7, team15, 1);
+            Match.displayWinnerFromProbability(team8, team16, 1);
             return;
         }
 
@@ -146,17 +155,18 @@ public final class Swiss {
         // Validate the input
         if (bracketsToSimulate <= 0 || bracketsToSimulate > 50000000) {
             System.out.println("Invalid input. Please enter a number between 1 and 50,000,000.");
-        } else {
-            System.out.println("Simulating " + bracketsToSimulate + " brackets...");
+            return;
+        }
 
-            // Simulate the brackets
-            if (standardBracket) {
-                StandardBracket bracket = new StandardBracket(teams);
-                bracket.simulateMultipleBrackets(bracketsToSimulate);
-            } else {
-                ChampionsBracket bracket = new ChampionsBracket(teams);
-                bracket.simulateMultipleBrackets(bracketsToSimulate);
-            }
+        System.out.println("Simulating " + bracketsToSimulate + " brackets...");
+
+        // Simulate the brackets
+        if (standardBracket) {
+            StandardBracket bracket = new StandardBracket(teams);
+            bracket.simulateMultipleBrackets(bracketsToSimulate);
+        } else {
+            ChampionsBracket bracket = new ChampionsBracket(teams);
+            bracket.simulateMultipleBrackets(bracketsToSimulate);
         }
     }
 }

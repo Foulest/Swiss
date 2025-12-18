@@ -14,30 +14,6 @@ public interface Bracket {
     long getStartingTime();
 
     /**
-     * Update the KDRs for both teams based on the match outcome.
-     *
-     * @param team1 The first team.
-     * @param team2 The second team.
-     * @param winner The winning team.
-     */
-    default void updateTeamKDR(Team team1, Team team2, Team winner, boolean bestOfThree) {
-        // Calculate win probability for dynamic KDR adjustment
-        double winProbability = Match.calculateWinProbability(team1, team2, bestOfThree);
-        double actualOutcome = (winner == team1) ? 1 : 0; // 1 if team1 wins, 0 if team2 wins
-
-        // Randomly generate the K-factor between 0.003 and 0.007
-        double K = 0.003 + Math.random() * 0.004;
-
-        // Adjust KDRs for both teams
-        double team1Expected = winProbability;  // Expected score for team1
-        double team2Expected = 1 - winProbability; // Expected score for team2
-
-        // Update KDR using Elo-like formula
-        team1.setKdr(team1.getKdr() + K * (actualOutcome - team1Expected));
-        team2.setKdr(team2.getKdr() + K * ((1 - actualOutcome) - team2Expected));
-    }
-
-    /**
      * Print the match result.
      *
      * @param winner  The winning team.
@@ -60,11 +36,11 @@ public interface Bracket {
     /**
      * Print the match result with a win probability.
      *
-     * @param winner  The winning team.
-     * @param records The records of each team.
-     * @param loser   The losing team.
+     * @param winner         The winning team.
+     * @param records        The records of each team.
+     * @param loser          The losing team.
      * @param winProbability The win probability of the match for Team 1.
-     * @param team1 The first team.
+     * @param team1          The first team.
      */
     default void printMatchResult(@NotNull Team winner,
                                   @NotNull Map<Team, int[]> records,
@@ -91,9 +67,9 @@ public interface Bracket {
     /**
      * Append a probability to the result string if it exists.
      *
-     * @param resultString The result string to append to.
-     * @param record The record to check for.
-     * @param recordCounts The record counts for the team.
+     * @param resultString   The result string to append to.
+     * @param record         The record to check for.
+     * @param recordCounts   The record counts for the team.
      * @param numSimulations The number of simulations.
      */
     static void appendProbability(StringBuilder resultString, String record,
@@ -101,7 +77,7 @@ public interface Bracket {
                                   int numSimulations) {
         if (recordCounts.containsKey(record)) {
             double probability = recordCounts.get(record) * 100.0 / numSimulations;
-            resultString.append(String.format("%s (%.2f%%) ", record, probability));
+            resultString.append(String.format("\t[%s] %.2f%%", record, probability));
         }
     }
 
@@ -109,7 +85,7 @@ public interface Bracket {
      * Print the header for the results.
      *
      * @param numSimulations The number of simulations.
-     * @param startingTime The starting time of the simulations.
+     * @param startingTime   The starting time of the simulations.
      */
     static void printHeader(int numSimulations, long startingTime) {
         long duration = System.currentTimeMillis() - startingTime;
@@ -125,8 +101,8 @@ public interface Bracket {
      * Update the records for each team.
      *
      * @param records The records of each team.
-     * @param winner The winning team.
-     * @param loser The losing team.
+     * @param winner  The winning team.
+     * @param loser   The losing team.
      */
     static void updateRecords(@NotNull Map<Team, int[]> records, Team winner, Team loser) {
         records.get(winner)[0] += 1;
