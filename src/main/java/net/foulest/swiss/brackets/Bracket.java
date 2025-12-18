@@ -1,6 +1,5 @@
 package net.foulest.swiss.brackets;
 
-import net.foulest.swiss.match.Match;
 import net.foulest.swiss.team.Team;
 import org.jetbrains.annotations.NotNull;
 

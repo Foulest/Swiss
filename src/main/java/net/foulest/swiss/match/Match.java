@@ -93,13 +93,6 @@ public class Match {
         int maxRank = 100; // reasonable normalization range
         double logRankAdj = rankDiffLog / Math.log(maxRank);
 
-//        // Logarithmic map win percentage difference
-//        double t1map = Math.max(0.0, t1.getRoundSwing());
-//        double t2map = Math.max(0.0, t2.getRoundSwing());
-//        double mapDiffLog = Math.log(t1map) - Math.log(t2map);
-//        double maxMap = 100.0; // reasonable normalization range
-//        double logMapAdj = mapDiffLog / Math.log(maxMap);
-
         // Compute scores (apply symmetric adjustment: boost better-ranked team, penalize the other)
         double t1Score = rankWeight / 100.0 * (100.0 - t1Rank)
                 + otherWeight * t1.getRoundSwing()

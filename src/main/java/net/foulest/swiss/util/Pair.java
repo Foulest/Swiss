@@ -17,8 +17,6 @@
  */
 package net.foulest.swiss.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,12 +27,7 @@ import org.jetbrains.annotations.NotNull;
  * @param <Y> The type of the second object.
  * @author Foulest
  */
-@Data
-@AllArgsConstructor
-public class Pair<X, Y> {
-
-    private final X first;
-    private final Y last;
+public record Pair<X, Y>(X first, Y last) {
 
     @Contract("_, _ -> new")
     public static <X, Y> @NotNull Pair<X, Y> of(X x, Y y) {
