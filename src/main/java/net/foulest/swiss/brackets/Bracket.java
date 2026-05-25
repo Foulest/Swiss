@@ -6,10 +6,23 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Represents a bracket for a Swiss tournament.
+ */
 public interface Bracket {
 
-    List<Team> getTeams();
+    /**
+     * Gets the teams in the bracket.
+     *
+     * @return The teams in the bracket.
+     */
+    List<? extends Team> getTeams();
 
+    /**
+     * Gets the starting time of the simulations.
+     *
+     * @return The starting time of the simulations.
+     */
     long getStartingTime();
 
     /**

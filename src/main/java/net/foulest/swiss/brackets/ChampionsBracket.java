@@ -17,6 +17,7 @@
  */
 package net.foulest.swiss.brackets;
 
+import lombok.Cleanup;
 import lombok.Data;
 import net.foulest.swiss.match.Match;
 import net.foulest.swiss.team.Team;
@@ -41,10 +42,15 @@ import java.util.stream.Collectors;
 @Data
 public class ChampionsBracket implements Bracket {
 
-    private List<Team> teams;
+    private @NotNull List<? extends Team> teams;
     private long startingTime;
 
-    public ChampionsBracket(@NotNull List<Team> teams) {
+    /**
+     * Creates a new ChampionsBracket with the given list of teams.
+     *
+     * @param teams The list of teams participating in the bracket.
+     */
+    public ChampionsBracket(@NotNull List<? extends Team> teams) {
         this.teams = teams;
         startingTime = System.currentTimeMillis();
     }
@@ -63,10 +69,10 @@ public class ChampionsBracket implements Bracket {
         teams.forEach(team -> results.put(team, new ConcurrentHashMap<>()));
 
         // ExecutorService to manage threads
-        ExecutorService executor = Executors.newWorkStealingPool();
+        @Cleanup ExecutorService executor = Executors.newWorkStealingPool();
 
         // Create tasks for simulations
-        List<Callable<Void>> tasks = new ArrayList<>();
+        Collection<Callable<Void>> tasks = new ArrayList<>();
         for (int i = 0; i < numSimulations; i++) {
             tasks.add(() -> {
                 simulateBracket(results); // Simulate one bracket
@@ -94,7 +100,7 @@ public class ChampionsBracket implements Bracket {
      * @param results The results of the simulations.
      */
     @SuppressWarnings("NestedMethodCall")
-    private void simulateBracket(Map<Team, Map<String, Integer>> results) {
+    private void simulateBracket(Map<Team, ? extends Map<String, Integer>> results) {
         Map<Team, int[]> records = new HashMap<>();
 
         // Initialize all the records to 0-0 (just for tracking wins/losses)

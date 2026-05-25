@@ -42,14 +42,19 @@ import java.util.stream.Collectors;
 @Data
 public class StandardBracket implements Bracket {
 
-    private List<Team> teams;
+    private @NotNull List<? extends Team> teams;
     private long startingTime;
 
     // For special conditions, like a team reaching a certain round
     int specialReached;
     int specialSuccess;
 
-    public StandardBracket(@NotNull List<Team> teams) {
+    /**
+     * Creates a new StandardBracket with the given list of teams.
+     *
+     * @param teams The list of teams participating in the bracket.
+     */
+    public StandardBracket(@NotNull List<? extends Team> teams) {
         this.teams = teams;
         startingTime = System.currentTimeMillis();
     }
@@ -83,7 +88,7 @@ public class StandardBracket implements Bracket {
         @Cleanup ExecutorService executor = Executors.newWorkStealingPool();
 
         // Create tasks for simulations
-        List<Callable<Void>> tasks = new ArrayList<>();
+        Collection<Callable<Void>> tasks = new ArrayList<>();
         for (int i = 0; i < numSimulations; i++) {
             tasks.add(() -> {
                 simulateBracket(results, headToHead); // Simulate one bracket
@@ -111,7 +116,8 @@ public class StandardBracket implements Bracket {
      * @param results The results of the simulations.
      */
     @SuppressWarnings("NestedMethodCall")
-    private void simulateBracket(Map<Team, Map<String, Integer>> results, Map<Team, Map<Team, Integer>> headToHead) {
+    private void simulateBracket(Map<Team, ? extends Map<String, Integer>> results,
+                                 Map<Team, ? extends Map<Team, Integer>> headToHead) {
         Map<Team, int[]> records = new HashMap<>();
         Map<Team, Integer> buchholzScores = new HashMap<>();
         Map<Team, List<Team>> pastOpponents = new HashMap<>();
@@ -187,8 +193,8 @@ public class StandardBracket implements Bracket {
                 // Sort teams by their standing
                 group.sort(Comparator.comparingInt(currentStandings::get));
 
-                List<Match> matches = new ArrayList<>();
-                List<Team> availableTeams = new ArrayList<>(group);
+                Collection<Match> matches = new ArrayList<>();
+                Collection<Team> availableTeams = new ArrayList<>(group);
 
                 // Create the matchups for the group
                 for (Team team : group) {
@@ -206,7 +212,7 @@ public class StandardBracket implements Bracket {
                     // Remove the team from the list of available teams
                     availableTeams.remove(team);
 
-                    List<Team> uniqueOpponents = new ArrayList<>();
+                    Collection<Team> uniqueOpponents = new ArrayList<>();
 
                     for (Team opponent : availableTeams) {
                         if (!pastOpponents.get(team).contains(opponent)) {
@@ -214,8 +220,8 @@ public class StandardBracket implements Bracket {
                         }
                     }
 
-                    List<Team> differentBuchholz = new ArrayList<>();
-                    List<Team> sameBuchholz = new ArrayList<>();
+                    Collection<Team> differentBuchholz = new ArrayList<>();
+                    Collection<Team> sameBuchholz = new ArrayList<>();
 
                     for (Team unique : uniqueOpponents) {
                         if (buchholzScores.get(unique).equals(buchholzScores.get(team))) {
@@ -230,24 +236,26 @@ public class StandardBracket implements Bracket {
                     Team highestStandingSameBuchholz = null;
 
                     for (Team other : differentBuchholz) {
-                        if (highestStandingDifferentBuchholz != null) {
+                        // If this is the first different Buchholz opponent, set it as the ideal matchup
+                        if (highestStandingDifferentBuchholz == null) {
+                            highestStandingDifferentBuchholz = other;
+                        } else {
                             int currentDifference = Math.abs(buchholzScores.get(other) - buchholzScores.get(team));
                             int highestDifference = Math.abs(buchholzScores.get(highestStandingDifferentBuchholz) - buchholzScores.get(team));
 
-                            if (currentDifference > highestDifference) {
+                            // If the current opponent has a higher Buchholz difference, or if they have the same
+                            // difference but a higher standing, update the ideal matchup
+                            if (currentDifference > highestDifference || (currentDifference == highestDifference &&
+                                    currentStandings.get(other) > currentStandings.get(highestStandingDifferentBuchholz))) {
                                 highestStandingDifferentBuchholz = other;
-                            } else if (currentDifference == highestDifference) {
-                                // If the differences are the same, fall back to comparing standings
-                                if (currentStandings.get(other) > currentStandings.get(highestStandingDifferentBuchholz)) {
-                                    highestStandingDifferentBuchholz = other;
-                                }
                             }
-                        } else {
-                            highestStandingDifferentBuchholz = other;
                         }
                     }
 
                     for (Team same : sameBuchholz) {
+                        // If this is the first same Buchholz opponent, set it as the ideal matchup
+                        // Otherwise, if this opponent has a higher standing than the current ideal matchup,
+                        // update the ideal matchup
                         if (highestStandingSameBuchholz == null || currentStandings.get(same) > currentStandings.get(highestStandingSameBuchholz)) {
                             highestStandingSameBuchholz = same;
                         }
@@ -278,7 +286,7 @@ public class StandardBracket implements Bracket {
 
                     // Create the match if an ideal matchup exists
                     if (idealMatchup != null) {
-                        Match match = new Match(team, idealMatchup, bestOfThree ? 3 : 1);
+                        Match match = new Match(team, idealMatchup, bestOfThree ? 2 : 1);
                         matches.add(match);
                         availableTeams.remove(idealMatchup);
                     } else {
@@ -302,8 +310,8 @@ public class StandardBracket implements Bracket {
                     updatePastOpponents(pastOpponents, winner, loser);
 
                     // Update head-to-head counts
-                    headToHead.get(team1).computeIfPresent(team2, (k, v) -> v + 1);
-                    headToHead.get(team2).computeIfPresent(team1, (k, v) -> v + 1);
+                    headToHead.get(team1).computeIfPresent(team2, (team, v) -> v + 1);
+                    headToHead.get(team2).computeIfPresent(team1, (team, v) -> v + 1);
 
                     // Add only teams that haven't been eliminated
                     if (records.get(winner)[1] < 3) {
@@ -336,7 +344,7 @@ public class StandardBracket implements Bracket {
 
             // Record the individual team's result (if needed)
             if (record[0] <= 3) {
-                results.get(team).put(result, results.get(team).getOrDefault(result, 0) + 1);
+                results.get(team).merge(result, 1, Integer::sum);
             }
         }
     }
@@ -382,10 +390,10 @@ public class StandardBracket implements Bracket {
      * @param records          The records of each team
      * @param currentStandings The current standings of each team
      */
-    private static void calculateCurrentStandings(int currentRound, Map<Team, int[]> records,
-                                                  Map<Team, Integer> currentStandings,
+    private static void calculateCurrentStandings(int currentRound, Map<? extends Team, int[]> records,
+                                                  Map<? super Team, ? super Integer> currentStandings,
                                                   Map<Team, Integer> buchholzScores) {
-        List<List<Team>> groups = new ArrayList<>();
+        Collection<List<Team>> groups = new ArrayList<>();
 
         // Define group conditions for each round
         switch (currentRound) {
@@ -453,7 +461,7 @@ public class StandardBracket implements Bracket {
      * @param losses  The number of losses.
      * @return The list of teams with the specified record.
      */
-    private static @NotNull List<Team> getTeamsByRecord(@NotNull Map<Team, int[]> records,
+    private static @NotNull List<Team> getTeamsByRecord(@NotNull Map<? extends Team, int[]> records,
                                                         int wins, int losses) {
         List<Team> group = new ArrayList<>();
 
@@ -468,7 +476,7 @@ public class StandardBracket implements Bracket {
     /**
      * Print head-to-head encounter percentages for each team.
      */
-    private static void printHeadToHead(@NotNull Map<Team, Map<Team, Integer>> headToHead) {
+    private static void printHeadToHead(@NotNull Map<? extends Team, ? extends Map<Team, Integer>> headToHead) {
         System.out.println();
         headToHead.forEach((team, opponents) -> {
             int totalMatches = opponents.values().stream().mapToInt(Integer::intValue).sum();
@@ -490,7 +498,7 @@ public class StandardBracket implements Bracket {
      * @param group          The group of teams.
      * @param buchholzScores The Buchholz score for each team.
      */
-    private static void sortTeams(@NotNull List<Team> group, Map<Team, Integer> buchholzScores) {
+    private static void sortTeams(@NotNull List<? extends Team> group, Map<Team, Integer> buchholzScores) {
         // Sort the teams by seeding first
         group.sort(Comparator.comparingInt(Team::getSeed));
 
@@ -517,7 +525,7 @@ public class StandardBracket implements Bracket {
      * @param winner        The winning team.
      * @param loser         The losing team.
      */
-    private static void updatePastOpponents(@NotNull Map<Team, List<Team>> pastOpponents, Team winner, Team loser) {
+    private static void updatePastOpponents(@NotNull Map<Team, ? extends List<Team>> pastOpponents, Team winner, Team loser) {
         pastOpponents.get(winner).add(loser);
         pastOpponents.get(loser).add(winner);
     }
@@ -530,10 +538,10 @@ public class StandardBracket implements Bracket {
      * @param records        The records of each team.
      * @param buchholzScores The Buchholz score for each team.
      */
-    private static void calculateBuchholz(@NotNull List<Team> activeTeams,
-                                          Map<Team, List<Team>> pastOpponents,
+    private static void calculateBuchholz(@NotNull Iterable<? extends Team> activeTeams,
+                                          Map<Team, ? extends List<Team>> pastOpponents,
                                           Map<Team, int[]> records,
-                                          Map<Team, Integer> buchholzScores) {
+                                          Map<? super Team, ? super Integer> buchholzScores) {
         // Calculate buchholz scores for the first round
         for (Team team : activeTeams) {
             int buchholz = 0;
@@ -555,7 +563,7 @@ public class StandardBracket implements Bracket {
      * @param records     The records of each team.
      * @return True if all teams have either 3 wins or 3 losses, false otherwise.
      */
-    private static boolean allTeamsDecided(@NotNull List<Team> activeTeams, Map<Team, int[]> records) {
+    private static boolean allTeamsDecided(@NotNull Iterable<? extends Team> activeTeams, Map<Team, int[]> records) {
         for (Team team : activeTeams) {
             int[] record = records.get(team);
 
@@ -590,12 +598,12 @@ public class StandardBracket implements Bracket {
         int maxNameLen = sortedEntries.stream()
                 .mapToInt(e -> e.getKey().getName().length())
                 .max().orElse(10);
-        int nameCol = Math.max(14, Math.min(28, maxNameLen + 2)); // clamp to a reasonable range
+        int nameCol = Math.clamp((long) maxNameLen + 2, 14, 28); // clamp to a reasonable range
 
-        // Print a fixed header row (added Rank and 3-A)
+        // Print a fixed header row
         System.out.printf(
-                "%-8s %-" + nameCol + "s  %6s  %6s  %10s  %10s  %10s  %10s  %10s  %10s  %10s  %10s  %10s%n",
-                "Seed", "Team", "Rank", "Swing", "[3-X]", "[X-3]", "[3-0]", "[3-1]", "[3-2]", "[2-3]", "[1-3]", "[0-3]", "[3-A]"
+                "%-8s %-" + nameCol + "s   %6s   %10s   %10s   %10s   %10s   %10s   %10s   %10s   %10s   %10s%n",
+                "Seed", "Team", "Score", "[3-X]", "[X-3]", "[3-0]", "[3-1]", "[3-2]", "[2-3]", "[1-3]", "[0-3]", "[3-A]"
         );
 
         // ---- Rows ----
@@ -616,11 +624,10 @@ public class StandardBracket implements Bracket {
 
             // Fixed-width aligned line; always print all columns on one line
             System.out.printf(
-                    "(#%-2d) %-" + nameCol + "s  %6.2f  %6.2f  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%%n",
+                    "(#%-2d) %-" + nameCol + "s  %6.3f   %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%  %10.2f%%%n",
                     team.getSeed(),
                     team.getName(),
-                    team.getRank(),
-                    team.getRoundSwing(),
+                    Match.adjustedTeamScore(team),
                     p3xPct, px3Pct, p30Pct, p31Pct, p32Pct, p23Pct, p13Pct, p03Pct, p3APct
             );
         }
@@ -632,5 +639,62 @@ public class StandardBracket implements Bracket {
             System.out.println("Special Success: " + specialSuccess);
             System.out.println("Special Odds: " + (specialSuccess * 100.0 / specialReached) + "%");
         }
+
+        // -------------------------------------------------------------------------
+        // Pick'em predictions — 2 × 3-0, 2 × 0-3, 6 × 3-X (no duplicates)
+        // -------------------------------------------------------------------------
+        System.out.println();
+        System.out.println("Pick'em Predictions:");
+
+        // Build a flat list of teams in seed order
+        List<Team> seededTeams = sortedEntries.stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        // Helper: retrieve a team's probability for a given record key
+        java.util.function.BiFunction<Team, String, Double> pct = (team, key) -> {
+            Map<String, Integer> counts = results.get(team);
+            return counts == null ? 0.0 : counts.getOrDefault(key, 0) * 100.0 / numSimulations;
+        };
+
+        // 2 teams most likely to go 3-0
+        List<Team> picks30 = seededTeams.stream()
+                .sorted(Comparator.comparingDouble((Team t) -> pct.apply(t, "3-0")).reversed())
+                .limit(2)
+                .collect(Collectors.toList());
+
+        System.out.println();
+        System.out.println("  [3-0]");
+        picks30.forEach(t -> System.out.printf("    (#%-2d) %-" + nameCol + "s  %.2f%%%n",
+                t.getSeed(), t.getName(), pct.apply(t, "3-0")));
+
+        // 2 teams most likely to go 0-3
+        List<Team> picks03 = seededTeams.stream()
+                .sorted(Comparator.comparingDouble((Team t) -> pct.apply(t, "0-3")).reversed())
+                .limit(2)
+                .collect(Collectors.toList());
+
+        System.out.println();
+        System.out.println("  [0-3]");
+        picks03.forEach(t -> System.out.printf("    (#%-2d) %-" + nameCol + "s  %.2f%%%n",
+                t.getSeed(), t.getName(), pct.apply(t, "0-3")));
+
+        // 6 teams most likely to advance, excluding the 3-0 and 0-3 picks
+        Set<Team> excluded = new HashSet<>();
+        excluded.addAll(picks30);
+        excluded.addAll(picks03);
+
+        List<Team> picks3X = seededTeams.stream()
+                .filter(t -> !excluded.contains(t))
+                .sorted(Comparator.comparingDouble((Team t) ->
+                        pct.apply(t, "3-0") + pct.apply(t, "3-1") + pct.apply(t, "3-2")).reversed())
+                .limit(6)
+                .collect(Collectors.toList());
+
+        System.out.println();
+        System.out.println("  [3-X]");
+        picks3X.forEach(t -> System.out.printf("    (#%-2d) %-" + nameCol + "s  %.2f%%%n",
+                t.getSeed(), t.getName(),
+                pct.apply(t, "3-0") + pct.apply(t, "3-1") + pct.apply(t, "3-2")));
     }
 }
